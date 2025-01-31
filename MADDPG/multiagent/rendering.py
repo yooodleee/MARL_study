@@ -304,4 +304,7 @@ class LineStyle(Attr):
         glEnable(GL_LINE_STIPPLE)
         glLineStipple(1, self.style)
     
-    
+    def disable(self):
+        glDisable(GL_LINE_STIPPLE)
+
+
