@@ -322,4 +322,9 @@ class Point(Geom):
     def __init__(self):
         Geom.__init__(self)
     
-    
+    def render1(self):
+        glBegin(GL_POINTS)
+        glVertex3f(0.0, 0.0, 0.0)
+        glEnd()
+
+
