@@ -328,3 +328,10 @@ class Point(Geom):
         glEnd()
 
 
+class FilledPolygon(Geom):
+
+    def __init__(self, v):
+        Geom.__init__(self)
+        self.v = v
+    
+    
