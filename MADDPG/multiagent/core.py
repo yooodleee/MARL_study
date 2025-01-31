@@ -50,10 +50,27 @@ class Entity(object):
         return self.initial_mass
 
 
-# properties of landmark entites
+# properties of landmark entities
 class Landmark(Entity):
 
     def __init__(self):
         super(Landmark, self).__init__()
 
+
+# properties of agent entities
+class Agent(Entity):
+
+    def __init__(self):
+        super(Agent, self).__init__()
+
+        self.movable = True         # agents are movable by default
+        self.silent = False         # cannot send communication signals
+        self.blind = False          # cannot observe the world
+        self.u_noise = None         # physical motor noise amount
+        self.c_noise = None         # communication noise amount
+        self.u_range = 1.0          # control range
+        self.state = AgentState()   # state
+        self.action = Action()      # action
+        self.action_callback = None # script behavior to execute
+    
 
