@@ -221,4 +221,15 @@ class Geom(object):
         self._color = Color((0, 0, 0, 1.0))
         self.attrs = [self._color]
     
+    def render(self):
+        for attr in reversed(self.attrs):
+            attr.enable()
+        
+        self.render1()
+        for attr in self.attrs:
+            attr.disable()
+    
+    def render1(self):
+        raise NotImplementedError
+    
     
