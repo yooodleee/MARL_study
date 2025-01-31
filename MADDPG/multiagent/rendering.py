@@ -317,3 +317,9 @@ class LineWidth(Attr):
         glLineWidth(self.stroke)
 
 
+class Point(Geom):
+
+    def __init__(self):
+        Geom.__init__(self)
+    
+    
