@@ -263,7 +263,7 @@ class Transform(Attr):
             scale=(1, 1)):
         
         self.set_translation(*translation)
-        self.set_roatation(rotation)
+        self.set_rotation(rotation)
         self.set_scale(*scale)
     
     def enable(self):
@@ -282,4 +282,7 @@ class Transform(Attr):
     def set_rotation(self, new):
         self.rotation = float(new)
     
-    
+    def set_scale(self, newx, newy):
+        self.scale = (float(newx), float(newy))
+
+
