@@ -266,4 +266,11 @@ class Transform(Attr):
         self.set_roatation(rotation)
         self.set_scale(*scale)
     
+    def enable(self):
+        glPushMatrix()
+        # translate to GL loc ppint
+        glTranslatef(self.translation[0], self.translation[1], 0)
+        glRotatef(RAD2DEG * self.roatation, 0, 0, 1.0)
+        glScalef(self.scale[0], self.scale[1], 1)
+    
     
