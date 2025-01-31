@@ -279,4 +279,7 @@ class Transform(Attr):
     def set_translation(self, newx, newy):
         self.translation = (float(newx), float(newy))
     
+    def set_rotation(self, new):
+        self.rotation = float(new)
+    
     
