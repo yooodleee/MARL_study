@@ -177,9 +177,21 @@ class Viewer(object):
     def draw_polyline(
             self,
             v,
-            *attrs):
+            **attrs):
         
         geom = make_polyline(v=v)
+        _add_attrs(geom, attrs)
+        self.add_onetime(geom)
+
+        return geom
+    
+    def draw_line(
+            self,
+            start,
+            end,
+            **attrs):
+        
+        geom = Line(start, end)
         _add_attrs(geom, attrs)
         self.add_onetime(geom)
 
