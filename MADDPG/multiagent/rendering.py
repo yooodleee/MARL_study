@@ -273,4 +273,7 @@ class Transform(Attr):
         glRotatef(RAD2DEG * self.roatation, 0, 0, 1.0)
         glScalef(self.scale[0], self.scale[1], 1)
     
+    def disable(self):
+        glPopMatrix()
+    
     
