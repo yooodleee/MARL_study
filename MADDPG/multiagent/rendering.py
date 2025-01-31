@@ -112,4 +112,7 @@ class Viewer(object):
     def add_geom(self, geom):
         self.geoms.append(geom)
     
+    def add_onetime(self, geom):
+        self.onetime_geoms.append(geom)
+    
     
