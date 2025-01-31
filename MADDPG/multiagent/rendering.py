@@ -245,3 +245,12 @@ class Geom(object):
         self._color.vec4 = (r, g, b, alpha)
 
 
+class Attr(object):
+
+    def enable(self):
+        raise NotImplementedError
+    
+    def disable(self):
+        pass
+
+
