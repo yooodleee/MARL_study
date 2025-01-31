@@ -410,3 +410,64 @@ class MultiAgentEnv(gym.Env):
         return dx
 
 
+class BatchMultiAgentEnv(gym.Env):
+    """
+    vectorized wrapper for a batch of multi-agent env.
+    assumes all envs have the same observation and action space.
+    """
+    metadata = {
+        'rumtime.vectorized': True,
+        'render.modes': ['human', 'rgb_array']
+    }
+
+    def __init__(self, env_batch):
+        self.env_batch = env_batch
+    
+    @property
+    def n(self):
+        return np.sum(
+            [env.n for env in self.env_batch]
+        )
+    
+    @property
+    def action_space(self):
+        return self.env_batch[0].action_space
+    
+    @property
+    def observation_space(self):
+        return self.env_batch[0].observation_space
+    
+    def step(self, action_n, time):
+        obs_n = []
+        reward_n = []
+        done_n = []
+        info_n = {'n': []}
+        i = 0
+
+        for env in self.env_batch:
+            obs, reward, done, _ = self.step(action_n[i: (i + env.n)], time)
+            i += env.n
+            obs_n += obs
+            # reward = [r / len(self.env_batch) for r in reward]
+            reward_n += reward
+            done_n += done
+        
+        return obs_n, reward_n, done_n, info_n
+    
+    def reset(self):
+        obs_n = []
+        for env in self.env_batch:
+            obs_n += env.reset()
+        
+        return obs_n
+    
+    def render(self, mode='human', close=True):
+        """
+        render environment.
+        """
+        results_n = []
+        for env in self.env_batch:
+            results_n += env.render(mode, close)
+        
+        return results_n
+    
