@@ -235,4 +235,13 @@ class Geom(object):
     def add_attr(self, attr):
         self.attrs.append(attr)
     
-    
+    def set_color(
+            self,
+            r,
+            g,
+            b,
+            alpha=1):
+
+        self._color.vec4 = (r, g, b, alpha)
+
+
