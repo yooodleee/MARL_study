@@ -91,4 +91,7 @@ class Viewer(object):
     def close(self):
         self.window.close()
     
+    def window_closed_by_user(self):
+        self.close()
+    
     
