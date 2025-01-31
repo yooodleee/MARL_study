@@ -308,3 +308,9 @@ class LineStyle(Attr):
         glDisable(GL_LINE_STIPPLE)
 
 
+class LineWidth(Attr):
+
+    def __init__(self, stroke):
+        self.stroke = stroke
+    
+    
