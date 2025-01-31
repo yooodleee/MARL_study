@@ -295,3 +295,9 @@ class Color(Attr):
         glColor4f(*self.vec4)
 
 
+class LineStyle(Attr):
+
+    def __init__(self, style):
+        self.style = style
+    
+    
