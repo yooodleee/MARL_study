@@ -115,4 +115,36 @@ class Viewer(object):
     def add_onetime(self, geom):
         self.onetime_geoms.append(geom)
     
+    def render(
+            self,
+            return_rgb_array=False):
+        
+        glClearColor(1, 1, 1, 1)
+
+        self.window.clear()
+        self.window.switch_to()
+        self.window.dispatch_events()
+        self.transform.enable()
+
+        for geom in self.geoms:
+            geom.render()
+        
+        for geom in self.onetime_geoms:
+            geom.render()
+        
+        self.transform.disable()
+        arr = None
+        if return_rgb_array:
+            buffer = pyglet.image.get_buffer_manager().get_color_buffer()
+            image_data = buffer.get_image_data()
+            arr = np.fromstring(
+                image_data.data, dtype=np.uint8, sep=''
+            )
+            arr = arr.reshape(buffer.height, buffer.width, 4)
+            arr = arr[::-1, :, 0:3]
+        
+        self.window.flip()
+        self.onetime_geoms = []
+        return arr
+    
     
