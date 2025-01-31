@@ -232,4 +232,7 @@ class Geom(object):
     def render1(self):
         raise NotImplementedError
     
+    def add_attr(self, attr):
+        self.attrs.append(attr)
+    
     
