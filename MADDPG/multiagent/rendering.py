@@ -88,4 +88,7 @@ class Viewer(object):
         glLineWidth(2.0)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     
+    def close(self):
+        self.window.close()
+    
     
