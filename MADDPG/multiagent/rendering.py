@@ -162,4 +162,16 @@ class Viewer(object):
 
         return geom
     
+    def draw_polygon(
+            self,
+            v,
+            filled=True,
+            **attrs):
+        
+        geom = make_polygon(v=v, filled=filled)
+        _add_attrs(geom, attrs)
+        self.add_onetime(geom)
+
+        return geom
+    
     
