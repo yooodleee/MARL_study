@@ -62,3 +62,30 @@ def get_display(spec):
         )
 
 
+class Viewer(object):
+
+    def __init__(self, width, height, display=None):
+        display = get_display(display)
+
+        self.width = width
+        self.height = height
+
+        self.window = pyglet.window.Window(
+            width=width,
+            height=height,
+            display=display
+        )
+        self.window.on_close = self.window_closed_by_user
+        self.geoms = []
+        self.onetime_geoms = []
+        self.transform = Transform()
+
+        glEnable(GL_BLEND)
+        # glEnable(GL_MULTISAMPLE)
+        glEnable(GL_LINE_SMOOTH)
+        # glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+        glLineWidth(2.0)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    
+    
