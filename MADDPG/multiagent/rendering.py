@@ -109,4 +109,7 @@ class Viewer(object):
             scale = (scalex, scaley),
         )
     
+    def add_geom(self, geom):
+        self.geoms.append(geom)
+    
     
