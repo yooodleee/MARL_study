@@ -20,3 +20,13 @@ class AgentState(EntityState):
         self.c = None
 
 
+# action of the agent
+class Action(object):
+
+    def __init__(self):
+        # physical action
+        self.u = None
+        # communication action
+        self.c = None
+
+
