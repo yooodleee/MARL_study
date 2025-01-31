@@ -50,3 +50,10 @@ class Entity(object):
         return self.initial_mass
 
 
+# properties of landmark entites
+class Landmark(Entity):
+
+    def __init__(self):
+        super(Landmark, self).__init__()
+
+
