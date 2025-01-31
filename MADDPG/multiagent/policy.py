@@ -40,4 +40,26 @@ class InteractivePolicy(Policy):
         env.viewers[agent_index].window.on_key_press = self.key_press
         env.viewers[agent_index].window.on_key_release = self.key_release
     
+    def action(self, obs):
+        """
+        Ignore observation and just act based on keyboard events.
+        """
+        if self.env.discrete_action_input:
+            u = 0
+            if self.move[0]: u = 1
+            if self.move[1]: u = 2
+            if self.move[2]: u = 4
+            if self.move[3]: u = 3
+        
+        else:
+            u = np.zeros(5) # 5-d because of no-move action
+            if self.move[0]: u[1] += 1.0
+            if self.move[1]: u[2] += 1.0
+            if self.move[3]: u[3] += 1.0
+            if self.move[2]: u[3] += 1.0
+            if True not in self.move:
+                u[0] += 1.0
+        
+        return np.concatenate([u, np.zeros(self.env.world.dim_c)])
+    
     
