@@ -44,3 +44,21 @@ import numpy as np
 RAD2DEG = 57.29577951308232
 
 
+def get_display(spec):
+    """
+    Convert a display specification (such as :0) into an actual Display object.
+
+    Pygelt only supports multiple Displays on Linux.
+    """
+    if spec is None:
+        return None
+    
+    elif isinstance(spec, six.string_types):
+        return pyglet.canvas.Display(spec)
+    
+    else:
+        raise error.Error(
+            'Invalid display specification: {}. (Must be a string like :0 or None.)'.format(spec)
+        )
+
+
