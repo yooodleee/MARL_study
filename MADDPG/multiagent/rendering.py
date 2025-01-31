@@ -313,4 +313,7 @@ class LineWidth(Attr):
     def __init__(self, stroke):
         self.stroke = stroke
     
-    
+    def enable(self):
+        glLineWidth(self.stroke)
+
+
