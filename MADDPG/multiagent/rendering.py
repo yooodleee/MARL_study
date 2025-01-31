@@ -276,4 +276,7 @@ class Transform(Attr):
     def disable(self):
         glPopMatrix()
     
+    def set_translation(self, newx, newy):
+        self.translation = (float(newx), float(newy))
+    
     
