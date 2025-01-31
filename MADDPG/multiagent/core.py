@@ -11,3 +11,12 @@ class EntityState(object):
         self.p_vel = None
 
 
+# state of agents (including communication and internal/mental state)
+class AgentState(EntityState):
+
+    def __init__(self):
+        super(AgentState, self).__init__()
+        # communication utterance
+        self.c = None
+
+
