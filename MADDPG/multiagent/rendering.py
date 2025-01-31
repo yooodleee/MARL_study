@@ -205,4 +205,13 @@ class Viewer(object):
         arr = arr.reshape(self.height, self.width, 4)
 
         return arr[::-1, :, 0:3]
+
+
+def _add_attrs(geom, attrs):
+    if "color" in attrs:
+        geom.set_color(*attrs["color"])
     
+    if "linewidth" in attrs:
+        geom.set_linewidth(attrs["linewidth"])
+
+
