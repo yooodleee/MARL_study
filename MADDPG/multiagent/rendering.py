@@ -147,4 +147,19 @@ class Viewer(object):
         self.onetime_geoms = []
         return arr
     
+    def draw_circle(
+            self,
+            radius=10,
+            res=30,
+            filled=True,
+            **attrs):
+        """
+        Convenience.
+        """
+        geom = make_circle(radius=radius, res=res, filled=filled)
+        _add_attrs(geom, attrs)
+        self.add_onetime(geom)
+
+        return geom
+    
     
