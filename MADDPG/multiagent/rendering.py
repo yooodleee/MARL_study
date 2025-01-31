@@ -215,3 +215,10 @@ def _add_attrs(geom, attrs):
         geom.set_linewidth(attrs["linewidth"])
 
 
+class Geom(object):
+
+    def __init__(self):
+        self._color = Color((0, 0, 0, 1.0))
+        self.attrs = [self._color]
+    
+    
