@@ -94,4 +94,19 @@ class Viewer(object):
     def window_closed_by_user(self):
         self.close()
     
+    def set_bounds(
+            self,
+            left,
+            right,
+            bottom,
+            top):
+        
+        assert right > left and top > bottom
+        scalex = self.width / (right - left)
+        scaley = self.height / (top - bottom)
+        self.transform = Transform(
+            translation = (-left * scalex, -bottom * scaley),
+            scale = (scalex, scaley),
+        )
+    
     
