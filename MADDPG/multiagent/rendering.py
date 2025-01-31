@@ -174,4 +174,15 @@ class Viewer(object):
 
         return geom
     
+    def draw_polyline(
+            self,
+            v,
+            *attrs):
+        
+        geom = make_polyline(v=v)
+        _add_attrs(geom, attrs)
+        self.add_onetime(geom)
+
+        return geom
+    
     
