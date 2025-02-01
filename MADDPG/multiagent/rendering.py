@@ -473,3 +473,13 @@ class Image(Geom):
         )
 
 
+# =============================================
+
+class SimpleImageViewer(object):
+
+    def __init__(self, display=None):
+        self.window = None
+        self.isopne = False
+        self.display = display
+    
+    
