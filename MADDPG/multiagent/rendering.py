@@ -382,3 +382,7 @@ def make_polygon(v, filled=True):
         return PolyLine(v, True)
 
 
+def make_polyline(v):
+    return PolyLine(v, False)
+
+
