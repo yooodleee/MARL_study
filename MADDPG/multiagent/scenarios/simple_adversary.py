@@ -84,4 +84,12 @@ class Scenario(BaseScenario):
 
             return tuple(dists)
     
+    def good_agents(self, world):
+        """
+        Return all agents that are not adversaries.
+        """
+        return [
+            agent for agent in world.agents if not agent.adversary
+        ]
+    
     
