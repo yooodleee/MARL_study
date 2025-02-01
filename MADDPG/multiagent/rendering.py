@@ -355,3 +355,22 @@ class FilledPolygon(Geom):
         glEnd()
     
 
+def make_circle(
+        radius=10,
+        res=10,
+        filled=True):
+    
+    points = []
+    for i in range(res):
+        ang = 2 * math.pi * i / res
+        points.append(
+            (math.cos(ang) * radius, math.sin(ang) * radius)
+        )
+    
+    if filled:
+        return FilledPolygon(points)
+    
+    else:
+        return PolyLine(points, True)
+
+
