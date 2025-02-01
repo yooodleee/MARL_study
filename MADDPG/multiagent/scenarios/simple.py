@@ -54,4 +54,12 @@ class Scenario(BaseScenario):
         )
         return -dist2
     
-    
+    def observation(self, agent, world):
+        """
+        Get positions of alll entities in this agent's reference frame.
+        """
+        entity_pos = []
+        for entity in world.landmarks:
+            entity_pos.append(entity.state.p_pos - agent.state.p_pos)
+        
+        return np.concatenate([agent.state.p_vel] + entity_pos)
