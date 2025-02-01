@@ -482,4 +482,33 @@ class SimpleImageViewer(object):
         self.isopne = False
         self.display = display
     
+    def imshow(self, arr):
+        if self.window is None:
+            height, width, channels = arr.shape
+
+            self.window = pyglet.window.Window(
+                width=width,
+                height=height,
+                display=self.display,
+            )
+            self.width = width
+            self.height = height
+            self.isopne = True
+        
+        assert arr.shape == (self.height, self.width, 3), "You passed in an image with the wrong number shape."
+        image = pyglet.image.ImageData(
+            self.width,
+            self.height,
+            'RGB',
+            arr.tobytes(),
+            pitch=self.width * -3
+        )
+
+        self.window.clear()
+        self.window.switch_to()
+        self.window.dispatch_events()
+        
+        image.blit(0, 0)
+        self.window.flip()
+    
     
