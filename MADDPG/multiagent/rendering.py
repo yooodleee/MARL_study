@@ -386,3 +386,14 @@ def make_polyline(v):
     return PolyLine(v, False)
 
 
+def make_capsule(length, width):
+    l, r, t, b = 0, length, width / 2, -width / 2
+    box = make_polygon([(l, b), (l, t), (r, t), (r, b)])
+    cir0 = make_circle(width / 2)
+    cir1 = make_circle(width / 2)
+    cir1.add_attr(Transform(translation=(length, 0)))
+    geom = Compound([box, cir0, cir1])
+    
+    return geom
+
+
