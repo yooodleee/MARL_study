@@ -64,4 +64,24 @@ class Scenario(BaseScenario):
             landmark.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
             landmark.state.p_vel = np.zeros(world.dim_p)
     
+    def benchmark_data(self, agent, world):
+        """
+        Returns data for benchmarking purposs.
+        """
+        if agent.adversary:
+            return np.sum(
+                np.square(agent.state.p_pos - agent.goal_a.state.p_pos)
+            )
+        else:
+            dists = []
+            for l in world.landmarks:
+                dists.append(
+                    np.sum(np.square(agent.state.p_pos - l.state.p_pos))
+                )
+            dists.append(
+                np.square(agent.state.p_pos - agent.goal_a.state.p_pos)
+            )
+
+            return tuple(dists)
+    
     
