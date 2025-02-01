@@ -339,7 +339,7 @@ class FilledPolygon(Geom):
         elif len(self.v)  > 4: glBegin(GL_POLYGON)
         else: glBegin(GL_TRIAGLES)
         for p in self.v:
-            glVertext3f(p[0], p[1], 0)  # draw each vertext
+            glVertex3f(p[0], p[1], 0)  # draw each vertext
         glEnd()
 
         color = (
@@ -351,7 +351,7 @@ class FilledPolygon(Geom):
         glColor4f(*color)
         glBegin(GL_LINE_LOOP)
         for p in self.v:
-            glVertext3f(p[0], p[1], 0)  # draw each vertext
+            glVertex3f(p[0], p[1], 0)  # draw each vertext
         glEnd()
     
 
@@ -424,7 +424,7 @@ class PolyLine(Geom):
     def render1(self):
         glBegin(GL_LINE_LOOP if self.close else GL_LINE_STRIP)
         for p in self.v:
-            glVertext3f(p[0], p[1], 0)  # draw each vertext
+            glVertex3f(p[0], p[1], 0)  # draw each vertext
         
         glEnd()
     
@@ -446,4 +446,10 @@ class Line(Geom):
         self.linewidth = LineWidth(1)
         self.add_attr(self.linewidth)
     
-    
+    def render1(self):
+        glBegin(GL_LINES)
+        glVertex2f(*self.start)
+        glVertex2f(*self.end)
+        glEnd()
+
+
