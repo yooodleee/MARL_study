@@ -411,3 +411,14 @@ class Compound(Geom):
             g.render()
 
 
+class PolyLine(Geom):
+
+    def __init__(self, v, close):
+        Geom.__init__(self)
+
+        self.v = v
+        self.close = close
+        self.linewidth = LineWidth(1)
+        self.add_attr(self.linewidth)
+    
+    
