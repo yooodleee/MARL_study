@@ -406,4 +406,8 @@ class Compound(Geom):
         for g in self.gs:
             g.attrs = [a for a in g.attrs if not isinstance(a, Color)]
     
-    
+    def render1(self):
+        for g in self.gs:
+            g.render()
+
+
