@@ -334,4 +334,24 @@ class FilledPolygon(Geom):
         Geom.__init__(self)
         self.v = v
     
+    def render1(self):
+        if len(self.v)   == 4: glBegin(GL_QUADS)
+        elif len(self.v)  > 4: glBegin(GL_POLYGON)
+        else: glBegin(GL_TRIAGLES)
+        for p in self.v:
+            glVertext3f(p[0], p[1], 0)  # draw each vertext
+        glEnd()
+
+        color = (
+            self._color.vec4[0] * 0.5,
+            self._color.vec4[1] * 0.5,
+            self._color.vec4[2] * 0.5,
+            self._color.vec4[3] * 0.5,
+        )
+        glColor4f(*color)
+        glBegin(GL_LINE_LOOP)
+        for p in self.v:
+            glVertext3f(p[0], p[1], 0)  # draw each vertext
+        glEnd()
     
+
