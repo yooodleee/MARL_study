@@ -177,3 +177,36 @@ class Scenario(BaseScenario):
         
         return pos_rew + adv_rew
     
+    def adversary_reward(self, agent, world):
+        """
+        entity_pos
+        -------------
+            Get positions of all entities in this agent's reference 
+                frame.
+
+        other_pos
+        -------------
+            communication of all other agents.
+        """
+        entity_pos = []
+        for entity in world.landmarks:
+            entity_pos.append(entity.state.p_pos - agent.state.p_pos)
+        
+        # entity colors
+        entity_color = []
+        for entity in world.landmarks:
+            entity_color.append(entity.color)
+        
+        other_pos = []
+        for other in world.agents:
+            if other is agent:
+                continue
+
+            other_pos.append(other.state.p_pos - agent.state.p_pos)
+        
+        if not agent.adversary:
+            return np.concatenate(
+                [agent.goal_a.state.p_pos - agent.state.p_pos] + entity_pos + other_pos
+            )
+        else:
+            return np.concatenate(entity_pos + other_pos)
