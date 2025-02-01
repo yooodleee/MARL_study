@@ -374,3 +374,11 @@ def make_circle(
         return PolyLine(points, True)
 
 
+def make_polygon(v, filled=True):
+    if filled:
+        return FilledPolygon(v)
+    
+    else:
+        return PolyLine(v, True)
+
+
