@@ -421,4 +421,11 @@ class PolyLine(Geom):
         self.linewidth = LineWidth(1)
         self.add_attr(self.linewidth)
     
+    def render1(self):
+        glBegin(GL_LINE_LOOP if self.close else GL_LINE_STRIP)
+        for p in self.v:
+            glVertext3f(p[0], p[1], 0)  # draw each vertext
+        
+        glEnd()
+    
     
