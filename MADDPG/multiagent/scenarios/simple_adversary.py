@@ -105,6 +105,75 @@ class Scenario(BaseScenario):
         Agents are rewarded based on minimum agent distance to each
             landmark.
         """
-        return self.adverary_reward(agent, world) \
+        return self.adversary_reward(agent, world) \
                 if agent.adversary else self.agent_reward(agent, world)
+    
+    def agent_reward(self, agent, world):
+        """
+        Rewarded based on how close any good agent is to the goal landmark,
+            and how far the adversary is from it.
+        """
+        shaped_reward = True
+        shaped_adv_reward = True
+
+        # Calculate negative reward for adversary.
+        adversary_agents = self.adversaries(world)
+        if shaped_adv_reward:   # distance-based adversary reward
+            adv_rew = sum(
+                [
+                    np.sqrt(
+                        np.sum(np.square(a.state.p_pos - a.goal_a.state.p_pos))
+                    )
+                    for a in adversary_agents
+                ]
+            )
+        else:   # proximity-based adversary reward (binary)
+            adv_rew = 0
+            for a in adversary_agents:
+                if np.sqrt(
+                    np.sum(
+                        np.square(a.state.p_pos - a.goal_a.state.p_pos)
+                    )
+                ) < 2 * a.goal_a.size:
+                    adv_rew -= 5
+        
+        # Calculate positive reward for agents
+        good_agents = self.good_agents(world)
+        if shaped_reward:   # distance-based agent reward
+            pos_rew = -min(
+                [
+                    np.sqrt(
+                        np.sum(
+                            np.square(a.state.p_pos - a.goal_a.state.p_pos)
+                        )
+                    )
+                    for a in good_agents
+                ]
+            )
+        else:   # proximity-based agent rewawrd (binary)
+            pos_rew = 0
+            if min(
+                [
+                    np.sqrt(
+                        np.sum(
+                            np.square(a.state.p_pos - a.goal_a.state.p_pos)
+                        )
+                    )
+                    for a in good_agents
+                ]
+            ) < 2 * agent.goal_a.size:
+                pos_rew += 5
+            
+            pos_rew -= min(
+                [
+                    np.sqrt(
+                        np.sum(
+                            np.square(a.state.p_pos - a.goal_a.state.p_pos)
+                        )
+                    )
+                    for a in good_agents
+                ]
+            )
+        
+        return pos_rew + adv_rew
     
