@@ -92,4 +92,12 @@ class Scenario(BaseScenario):
             agent for agent in world.agents if not agent.adversary
         ]
     
+    def adversaries(self, world):
+        """
+        Return all adversarial agents.
+        """
+        return [
+            agent for agent in world.agents if agent.adversary
+        ]
+    
     
