@@ -100,4 +100,11 @@ class Scenario(BaseScenario):
             agent for agent in world.agents if agent.adversary
         ]
     
+    def reward(self, agent, world):
+        """
+        Agents are rewarded based on minimum agent distance to each
+            landmark.
+        """
+        return self.adverary_reward(agent, world) \
+                if agent.adversary else self.agent_reward(agent, world)
     
