@@ -428,4 +428,7 @@ class PolyLine(Geom):
         
         glEnd()
     
-    
+    def set_linewidth(self, x):
+        self.linewidth.stroke = x
+
+
