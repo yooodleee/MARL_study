@@ -479,7 +479,7 @@ class SimpleImageViewer(object):
 
     def __init__(self, display=None):
         self.window = None
-        self.isopne = False
+        self.isopen = False
         self.display = display
     
     def imshow(self, arr):
@@ -510,5 +510,10 @@ class SimpleImageViewer(object):
         
         image.blit(0, 0)
         self.window.flip()
+    
+    def close(self):
+        if self.isopen:
+            self.window.close()
+            self.isopen = False
     
     
