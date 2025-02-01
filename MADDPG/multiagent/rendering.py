@@ -397,3 +397,13 @@ def make_capsule(length, width):
     return geom
 
 
+class Compound(Geom):
+
+    def __init__(self, gs):
+        Geom.__init__(self)
+        
+        self.gs = gs
+        for g in self.gs:
+            g.attrs = [a for a in g.attrs if not isinstance(a, Color)]
+    
+    
