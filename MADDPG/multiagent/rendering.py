@@ -453,3 +453,15 @@ class Line(Geom):
         glEnd()
 
 
+class Image(Geom):
+
+    def __init__(self, fname, width, height):
+        Geom.__init__(self)
+
+        self.width = width
+        self.height = height
+        img = pyglet.image.load(fname)
+        self.img = img
+        self.flip = False
+    
+    
