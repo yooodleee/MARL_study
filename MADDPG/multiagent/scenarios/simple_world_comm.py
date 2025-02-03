@@ -66,4 +66,34 @@ class Scenario(BaseScenario):
         return world
     
 
+    def set_boundaries(self, world):
+        boundary_list = []
+        landmark_size = 1
+        edge = 1 + landmark_size
+        num_landmarks = int(edge * 2 / landmark_size)
+
+        for x_pos in [-edge, edge]:
+            for i in range(num_landmarks):
+                l = Landmark()
+                l.state.p_pos = np.array([x_pos, -1 + i * landmark_size])
+                boundary_list.append(l)
+        
+        for y_pos in [-edge, edge]:
+            for i in range(num_landmarks):
+                l = Landmark()
+                l.state.p_pos = np.array([-1 + i * landmark_size, y_pos])
+                boundary_list.append(l)
+        
+        for i, l in enumerate(boundary_list):
+            l.name = 'boundary %d' % i
+            l.collide = True
+            l.movable = False
+            l.boundary = True
+            l.color = np.array([0.75, 0.75, 0.75])
+            l.size = landmark_size
+            l.state.p_vel = np.zeros(world.dim_p)
+        
+        return boundary_list
+    
+
     
