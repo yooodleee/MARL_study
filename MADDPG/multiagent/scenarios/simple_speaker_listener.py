@@ -74,4 +74,11 @@ class Scenario(BaseScenario):
             landmark.state.p_vel = np.zeros(world.dim_p)
     
 
+    def benchmark_data(self, agent, world):
+        """
+        Returns data for benchmarking purposes
+        """
+        return self.reward(agent, reward)
+    
+    
     
