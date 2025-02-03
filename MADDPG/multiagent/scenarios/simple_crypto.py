@@ -126,4 +126,29 @@ class Scenario(BaseScenario):
             agent, world
         ) if agent.adversary else self.agent_reward(agent, world)
     
+    def agent_reward(self, agent, world):
+        """
+        Agents rewarded if Bob can reconstruct message,
+            but adversary (Eve) cannot
+        """
+        good_listeners = self.good_listeners(world)
+        adversaries = self.adversaries(world)
+        good_rew = 0
+        adv_rew = 0
+        
+        for a in good_listeners:
+            if (a.state.c == np.zeros(world.dim_c)).all():
+                continue
+            else:
+                good_rew -= np.sum(np.square(a.state.c - agent.goal_a.color))
+        
+        for a in adversaries:
+            if (a.state.c == np.zeros(world.dim_c)).all():
+                continue
+            else:
+                adv_l1 = np.sum(np.square(a.state.c - agent.goal_a.color))
+                adv_rew += adv_l1
+        
+        return adv_rew + good_rew
+    
     
