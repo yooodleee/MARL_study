@@ -121,4 +121,9 @@ class Scenario(BaseScenario):
             if agent.adversary
         ]
     
+    def reward(self, agent, world):
+        return self.adversary_reward(
+            agent, world
+        ) if agent.adversary else self.agent_reward(agent, world)
+    
     
