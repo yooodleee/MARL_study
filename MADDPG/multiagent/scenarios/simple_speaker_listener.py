@@ -78,7 +78,7 @@ class Scenario(BaseScenario):
         """
         Returns data for benchmarking purposes
         """
-        return self.reward(agent, reward)
+        return self.reward(agent, world)
     
     def reward(self, agent, world):
         """
@@ -90,5 +90,33 @@ class Scenario(BaseScenario):
         )
         return -dist2
     
-    
-    
+
+    def observation(self, agent, world):
+
+        # goal color
+        goal_color = np.zeros(world.dim_color)
+        if agent.goal_b is not None:
+            goal_color = agent.goal_b.color
+
+        # get positions of all entities in this agent's reference frame
+        entity_pos = []
+        for entity in world.landmarks:
+            entity_pos.append(entity.state.p_pos - agent.state.p_pos)
+        
+        # communication of all other agents
+        comm = []
+        for other in world.agents:
+            if other is agent or (other.state.c is None):
+                continue
+
+            comm.append(other.state.c)
+        
+        # speaker
+        if not agent.movable:
+            return np.concatenate([goal_color])
+        
+        # listener
+        if agent.silent:
+            return np.concatenate(
+                [agent.state.p_vel] + entity_pos + comm
+            )
