@@ -190,4 +190,14 @@ class Scenario(BaseScenario):
         return main_reward
     
 
+    def outside_boundary(self, agent):
+        if agent.state.p_pos[0] > 1 \
+        or agent.state.p_pos[0] < -1 \
+        or agent.state.p_pos[1] > 1 \
+        or agent.state.p_pos[1] < -1:
+            return True
+        else:
+            return False
+    
+
     
