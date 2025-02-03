@@ -168,4 +168,14 @@ class Scenario(BaseScenario):
         ]
     
 
+    def adversaries(self, world):
+        """
+        Return all adversarial agents
+        """
+        return [
+            agent for agent in world.agents
+            if agent.adversary
+        ]
+    
+
     
