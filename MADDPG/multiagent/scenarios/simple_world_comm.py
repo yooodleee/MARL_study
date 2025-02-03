@@ -138,4 +138,16 @@ class Scenario(BaseScenario):
                 landmark.stat.p_vel = np.zeros(world.dim_p)
         
 
+        def benchmark_data(self, agent, world):
+            if agent.adversary:
+                collisions = 0
+                for a in self.good_agents(world):
+                    if self.is_collision(a, agent):
+                        collisions += 1
+                    
+                return collisions
+            else:
+                return 0
+
         
+            
