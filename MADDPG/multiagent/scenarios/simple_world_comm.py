@@ -251,4 +251,34 @@ class Scenario(BaseScenario):
         return rew
     
 
+    def adversary_reward(self, agent, world):
+        """
+        Agents are rewarded based on minimum agent distance to each
+            landmark
+        """
+        rew = 0
+        shape = True
+        agents = self.good_agents(world)
+        adversaries = self.adversaries(world)
+
+        if shape:
+            rew -= 0.1 * min(
+                [
+                    np.sqrt(
+                        np.sum(
+                            np.square(a.state.p_pos - agent.state.p_pos)
+                        )
+                    )
+                    for a in agents
+                ]
+            )
+        if agents.collide:
+            for ag in agents:
+                for adv in adversaries:
+                    if self.is_collision(ag, adv):
+                        rew += 5
+        
+        return rew
+    
+
     
