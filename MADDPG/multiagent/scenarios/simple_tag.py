@@ -91,4 +91,13 @@ class Scenario(BaseScenario):
         return True if dist < dist_min else False
     
 
+    def good_agents(self, world):
+        """
+        Return all agents that are not adversaries
+        """
+        return [
+            agent for agent in world.agents
+            if not agent.adversary
+        ]
+    
     
