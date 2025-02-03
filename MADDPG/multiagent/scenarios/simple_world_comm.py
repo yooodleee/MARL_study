@@ -178,4 +178,16 @@ class Scenario(BaseScenario):
         ]
     
 
+    def reward(self, agent, world):
+        """
+        Agent are rewarded based on minimum agent distance to each landmark
+        """
+        
+        # boundary_reward = -10 if self.outside_boundary(agent) else 0
+        main_reward = self.adversary_reward(agent, world) \
+            if agent.adversary else self.agent_reward(agent, world)
+        
+        return main_reward
+    
+
     
