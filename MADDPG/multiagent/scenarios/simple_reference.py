@@ -68,4 +68,16 @@ class Scenario(BaseScenario):
             landmark.state.p_vel = np.zeros(world.dim_p)
     
 
+    def reward(self, agent, world):
+        if agent.goal_a is None or agent.goal_b is None:
+            return 0.0
+        
+        dist2 = np.sum(
+            np.square(
+                agent.goal_a.state.p_pos - agent.goal_b.state.p_pos
+            )
+        )
+        return -dist2
+    
+
     
