@@ -161,4 +161,61 @@ class Scenario(BaseScenario):
         
         return rew
     
-    
+    def observation(self, agent, world):
+
+        # goal color
+        goal_color = np.zeros(world.dim_color)
+        if agent.goal_a is not None:
+            goal_color = agent.goal_a.color
+
+        
+        # get positions of all entities in this agent's reference frame
+        entity_pos = []
+        for entity in world.landmarks:
+            entity_pos.append(entity.state.p_pos - agent.state.p_pos)
+        
+        # communication of all other agents
+        comm = []
+        for other in world.agents:
+            if other is agent or (other.state.c is None) or other.speaker:
+                continue
+                
+            comm.append(other.state.c)
+        
+        confer = np.array([0])
+
+        if world.agents[2].key is None:
+            confer = np.array([1])
+            key = np.zeros(world.dim_c)
+            goal_color = np.zeros(world.dim_c)
+        else:
+            key = world.agents[2].key
+        
+        prnt = False
+        # speaker
+        if agent.speaker:
+            if prnt:
+                print('speaker')
+                print(agent.state.c)
+                print(
+                    np.concatenate([goal_color] + [key] + [confer] + [np.random.randn(1)])
+                )
+            
+            return np.concatenate([goal_color] + [key])
+        
+        # listener
+        if not agent.speaker and not agent.adversary:
+            if prnt:
+                print('listener')
+                print(agent.state.c)
+                print(np.concatenate([key] + comm + [confer]))
+            
+            return np.concatenate([key] + comm)
+        
+        if not agent.speaker and agent.adversary:
+            if prnt:
+                print('adversary')
+                print(agent.state.c)
+                print(np.concatenate(comm + [confer]))
+            
+            return np.concatenate(comm)
