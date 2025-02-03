@@ -51,3 +51,40 @@ class Scenario(BaseScenario):
         return world
     
     
+    def reset_world(self, world):
+        
+        # random properties for agents
+        for i, agent in enumerate(world.agents):
+            agent.color = np.array([0.25, 0.25, 0.25])
+            if agent.adversary:
+                agent.color = np.array([0.75, 0.25, 0.25])
+            
+            agent.key = None
+        
+        # random properties for landmarks
+        color_list = [np.zeros(world.dim_c) for i in world.landmarks]
+        for i, color in enumerate(color_list):
+            color[i] += 1
+        
+        for color, landmark in zip(color_list, world.landmarks):
+            landmark.color = color
+        
+        # set gaol landmark
+        goal = np.random.choice(world.landmarks)
+        world.agents[1].color = goal.color
+        world.agents[2].key = np.random.choice(world.landmarks).color
+
+        for agent in world.agents:
+            agent.goal_a = goal
+        
+        # set random initial states
+        for agent in world.agents:
+            agent.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
+            agent.state.p_vel = np.zeros(world.wim_p)
+            agent.state.c = np.zeros(world.dim_c)
+        
+        for i, landmark in enumerate(world.landmarks):
+            landmark.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
+            landmark.state.p_vel = np.zeros(world.dim_p)
+    
+    
