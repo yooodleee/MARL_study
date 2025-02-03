@@ -69,4 +69,12 @@ class Scenario(BaseScenario):
             landmark.state.p_vel = np.zeros(world.dim_p)
     
 
+    def reward(self, agent, world):
+        """
+        Agents are rewarded based on minimum agent distance to each landmark
+        """
+        return self.adversary_reward(
+            agent, world
+        ) if agent.adversary else self.agent_reward(agent, world)
+    
     
