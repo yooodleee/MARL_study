@@ -88,4 +88,28 @@ class Scenario(BaseScenario):
             )
         )
     
+    def adversary_reward(self, agent, world):
+
+        # keep the nearest good agents away from the goal
+        agent_dist = [
+            np.sqrt(
+                np.sum(
+                    np.square(a.state.p_pos - a.goal_a.state.p_pos)
+                )
+            )
+            for a in world.agents if not a.adversary
+        ]
+        pos_rew = min(agent_dist)
+
+        # nearest_agent = world.good_agents[np.argmin(agent_dist)]
+        # neg_rew = np.sqrt(np.sum(np.square(nearest_agent.state.p_pos - agent.state.p_pos)))
+        neg_rew = np.sqrt(
+            np.sum(
+                np.square(agent.goal_a.p_pos - agent.state.p_pos)
+            )
+        )
+        # neg_rew = sum([np.sqrt(np.sum(np.square(a.state.p_pos - agent.state.p_pos))) for a in world.good_agents])
+        return pos_rew - neg_rew
+    
+
     
