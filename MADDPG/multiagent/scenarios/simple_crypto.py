@@ -87,4 +87,11 @@ class Scenario(BaseScenario):
             landmark.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
             landmark.state.p_vel = np.zeros(world.dim_p)
     
+
+    def benchmark_data(self, agent, world):
+        """
+        Returns data for benchmarking purposes
+        """
+        return (agent.state.c, agent.goal_a.color)
+    
     
