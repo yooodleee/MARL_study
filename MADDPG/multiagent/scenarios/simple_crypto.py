@@ -94,4 +94,13 @@ class Scenario(BaseScenario):
         """
         return (agent.state.c, agent.goal_a.color)
     
+    def good_listeners(self, world):
+        """
+        Return all agents that are not adversaries
+        """
+        return [
+            agent for agent in world.agents
+            if not agent.adversary and not agent.speaker
+        ]
+    
     
