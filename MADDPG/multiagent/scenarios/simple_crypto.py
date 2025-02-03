@@ -103,4 +103,13 @@ class Scenario(BaseScenario):
             if not agent.adversary and not agent.speaker
         ]
     
+    def good_agents(self, world):
+        """
+        Return all agents that are not adversareis
+        """
+        return [
+            agent for agent in world.agents
+            if not agent.adversary
+        ]
+    
     
