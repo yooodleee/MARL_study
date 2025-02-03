@@ -151,4 +151,14 @@ class Scenario(BaseScenario):
         
         return adv_rew + good_rew
     
+    def adversary_reward(self, agent, world):
+        """
+        Adversary (Eve) is rewarded if it can reconstruct original goal
+        """
+        rew = 0
+        if not (agent.state.c == np.zeros(world.dim_c)).all():
+            rew -= np.sum(np.square(agent.state.c - agent.goal_a.color))
+        
+        return rew
+    
     
