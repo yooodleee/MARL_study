@@ -138,16 +138,24 @@ class Scenario(BaseScenario):
                 landmark.stat.p_vel = np.zeros(world.dim_p)
         
 
-        def benchmark_data(self, agent, world):
-            if agent.adversary:
-                collisions = 0
-                for a in self.good_agents(world):
-                    if self.is_collision(a, agent):
-                        collisions += 1
+    def benchmark_data(self, agent, world):
+        if agent.adversary:
+            collisions = 0
+            for a in self.good_agents(world):
+                if self.is_collision(a, agent):
+                    collisions += 1
                     
-                return collisions
-            else:
-                return 0
+            return collisions
+        else:
+            return 0
 
+
+    def is_collision(self, agent1, agent2):
+        delta_pos = agent1.state.p_pos - agent2.state.p_pos
+        dist = np.sqrt(np.sum(np.square(delta_pos)))
+        dist_min = agent1.size + agent2.size
+
+        return True if dist < dist_min else False
         
-            
+
+    
