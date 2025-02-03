@@ -123,4 +123,27 @@ class Scenario(BaseScenario):
         return main_reward
     
 
+    def agent_reward(self, agent, world):
+        """
+        Agents are negatively rewarded if caught by adversaries
+        """
+        rew = 0
+        shape = False
+        adversaries = self.adversaries(world)
+
+        if shape:
+            # reward can optionally be shaped 
+            # (increased reward for increased distance from adversary)
+            for adv in adversaries:
+                rew += 0.1 * np.sqrt(
+                    np.sum(
+                        np.square(agent.state.p_pos - adv.state.p_pos)
+                    )
+                )
+        if agent.collide:
+            for a in adversaries:
+                if self.is_collision(a, agent):
+                    rew -= 10
+    
+
     
