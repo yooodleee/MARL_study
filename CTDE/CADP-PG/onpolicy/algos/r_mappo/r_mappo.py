@@ -132,4 +132,148 @@ class R_MAPPO():
         return value_loss
     
 
+    def ppo_update(
+            self,
+            sample,
+            update_actor=True):
+        
+        """
+        Update actor and critic networks.
+
+        Params
+        ---------
+            - sample (Tuple)
+                contains data batch with which to update networks.
+            - update_actor (bool)
+                whether to update actor network.
+
+        
+        Returns
+        ------------
+            - value_loss (torch.Tensor)
+                value function loss.
+            - critic_grad_norm (torch.Tensor)
+                gradient norm from critic up9data.
+            - policy_loss (torch.Tensor)
+                actor(policy) loss value.
+            - dist_entropy (torch.Tensor)
+                action entropies.
+            - actor_grad_norm (torch.Tensor)
+                gradient norm from actor update.
+            - imp_weights (torch.Tensor)
+                importance sampling weights.
+        """
+        share_obs_batch, \
+        obs_batch, \
+        rnn_states_batch, \
+        rnn_states_critic_batch, \
+        actions_batch, \
+        value_preds_batch, \
+        return_batch, \
+        masks_batch, \
+        active_masks_batch, \
+        old_action_log_probs_batch, \
+        adv_trag, \
+        available_actions_batch = sample
+
+        old_action_log_probs_batch = check(old_action_log_probs_batch).to(**self.tpdv)
+        adv_trag = check(adv_trag).to(**self.tpdv)
+        value_preds_batch = check(value_preds_batch).to(**self.tpdv)
+        return_batch = check(return_batch).to(**self.tpdv)
+        active_masks_batch = check(active_masks_batch).to(**self.tpdv)
+
+
+        # reshape to do in a single forward pass for all steps
+        values, \
+        action_log_progs, \
+        dist_entropy = self.policy.evaluate_actions(
+            share_obs_batch,
+            obs_batch,
+            rnn_states_batch,
+            rnn_states_critic_batch,
+            actions_batch,
+            masks_batch,
+            available_actions_batch,
+            active_masks_batch,
+        )
+
+        # actor update
+        imp_weights = torch.exp(action_log_progs - old_action_log_probs_batch)
+
+        surr1 = imp_weights * adv_trag
+        surr2 = torch.clamp(
+            imp_weights,
+            1.0 - self.clip_param,
+            1.0 + self.clip_param,
+        ) * adv_trag
+
+
+        if self._use_policy_active_masks:
+            policy_action_loss = (
+                -torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True)
+                * active_masks_batch
+            ).sum() / active_masks_batch.sum()
+        else:
+            policy_action_loss = -torch.sum(
+                torch.min(surr1, surr2), dim=-1, keepdim=True
+            ).mean()
+        
+        policy_loss = policy_action_loss
+
+
+        if getattr(self.args, 'use_CADP', False):
+            if self.use_cadp_loss:
+
+                att = self.policy.actor.att.dot
+                eps = 1e-8
+                eye = torch.eye(self.args.num_agents).unsqueeze(0).repeat(att.shape[0], 1, 1)
+                eye = eye.view(-1, self.args.num_agents).to(**self.tpdv)
+                att = att.view(-1, self.args.num_agents)
+
+                cadp_loss = F.kl_div((att + eps).log(), eye, reduction='mean')
+                policy_loss = policy_loss + 0.5 * cadp_loss
+            
+
+        self.policy.actor_optimizer.zero_grad()
+
+        if update_actor:
+            (policy_loss - dist_entropy * self.entropy_coef).backward()
+            
+
+        if self._use_max_grad_norm:
+            actor_grad_norm = nn.utils.clip_grad_norm_(
+                self.policy.actor.parameters(), self.max_grad_norm
+            )
+        else:
+            actor_grad_norm = get_grad_norm(self.policy.actor.parameters())
+            
+        self.policy.actor_optimizer.step()
+
+
+        # critic update
+        value_loss = self.cal_value_loss(
+            values,
+            value_preds_batch, 
+            return_batch, 
+            active_masks_batch,
+        )
+
+        self.policy.critic_optimizer.zero_grad()
+
+        (value_loss * self.value_loss_coef).backward()
+
+
+        if self._use_max_grad_norm:
+            critic_grad_norm = nn.utils.clip_grad_norm_(
+                self.policy.critic.parameters(), self.max_grad_norm
+            )
+        else:
+            critic_grad_norm = get_grad_norm(self.policy.critic.parameters())
+            
+        self.policy.critic_optimizer.step()
+
+
+        return value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights
+        
+
     
