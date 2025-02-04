@@ -116,4 +116,70 @@ class R_MAPPOPolicy:
         )
 
 
+    def get_actions(
+            self,
+            cent_obs,
+            obs,
+            rnn_states_actor,
+            rnn_states_critic,
+            masks,
+            available_actions=None,
+            deterministic=False):
+        
+        """
+        Compute actions and value function predictions for the given inputs.
+
+        
+        Params
+        -----------
+            cent_obs: (np.ndarray)
+                centralized input to the critic.
+            obs: (np.ndarray)
+                local agent inputs to the actor.
+            rnn_states_actor: (np.ndarray)
+                if actor is RNN, RNN states for actor.
+            rnn_states_critic: (np.ndarray)
+                if critic is RNN, RNN states for critic.
+            masks: (np.ndarray)
+                denotes points at which RNN states should be reset.
+            availble_actions: (np.ndarray)
+                denotes which actions are available to agent (if None,
+                all actions available).
+            deterministic: (bool)
+                whether the action should be mode of distribution or should
+                be sampled.
+
+
+        Returns
+        -----------
+            values: (torch.Tensor)
+                value function predictions.
+            actions: (torch.Tensor)
+                actions to take.
+            action_log_progs: (torch.Tensor)
+                log probabilities of chosen actions.
+            rnn_states_actor: (torch.Tensor)
+                updated actor network RNN states.
+            rnn_states_critic: (torch.Tensor)
+                updated critic network RNN states.
+        """
+        actions, \
+        action_log_probs, \
+        rnn_states_actor = self.actor(
+            obs,
+            rnn_states_actor,
+            masks,
+            available_actions,
+            deterministic,
+        )
+
+        values, rnn_states_critic = self.critic(
+            cent_obs,
+            rnn_states_critic,
+            masks,
+        )
+
+        return values, actions, action_log_probs, rnn_states_actor, rnn_states_critic
+    
+
     
