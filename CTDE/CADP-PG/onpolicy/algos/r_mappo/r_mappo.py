@@ -371,4 +371,6 @@ class R_MAPPO():
         self.policy.critic.train()
     
 
-    
+    def prep_rollout(self):
+        self.policy.actor.eval()
+        self.policy.critic.eval()
