@@ -212,4 +212,63 @@ class R_MAPPOPolicy:
         return values
     
 
+    def evaluate_actions(
+            self,
+            cent_obs,
+            obs,
+            rnn_states_actor,
+            rnn_states_critic,
+            action,
+            masks,
+            available_actions=None,
+            active_masks=None):
+        
+        """
+        Get action logprobs / entropy and value function predictions for actor update.
+
+
+        Params
+        -----------
+            cent_obs: (np.ndarray)
+                centralized input to the critic.
+            obs: (np.ndarray)
+                local agent inputs to the actor.
+            rnn_states_actor: (np.ndarray)
+                if actor is RNN, RNN states for actor.
+            rnn_states_critic: (np.ndarray)
+                if critic is RNN, RNN states for critic.
+            action: (np.ndarray)
+                actions whose log probabilities and entropy to compute.
+            masks:  (np.ndarray)
+                denotes points at which RNN states should be reset.
+            available_actions: (np.ndarray)
+                denotes which actions are available to agent (if None,
+                all actions available).
+            active_masks: (torch.Tensor)
+                denoces whether an agent is active or dead.
+
+
+        Returns
+        -----------
+            values: (torch.Tensor)
+                value function predictions.
+            action_log_probs: (torch.Tensor)
+                log probabilites of the input actions.
+            dist_entropy: (torch.Tensor)
+                action distribution entropy for the given inputs.
+        """
+        action_log_probs, dist_entropy = self.actor.evaluate_actions(
+            obs,
+            rnn_states_actor,
+            action,
+            masks,
+            available_actions,
+            active_masks,
+        )
+
+        values, _ = self.critic(cent_obs, rnn_states_critic, masks)
+
+        return values, action_log_probs, dist_entropy
+    
+
     
