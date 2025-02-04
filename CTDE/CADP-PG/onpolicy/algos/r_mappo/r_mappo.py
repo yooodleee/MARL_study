@@ -366,4 +366,9 @@ class R_MAPPO():
         return train_info
     
 
+    def prep_training(self):
+        self.policy.actor.train()
+        self.policy.critic.train()
+    
+
     
