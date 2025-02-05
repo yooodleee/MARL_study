@@ -162,4 +162,43 @@ class ACTLayer(nn.Module):
         return actions, action_log_probs
     
 
+    def get_probs(
+            self,
+            x,
+            available_actions=None):
+        
+        """
+        Compute act probs from inputs.
+
+
+        Params
+        ---------
+            x: (torch.Tensor)
+                input to network.
+            available_actions: (torch.Tensor)
+                denotes which acts are available to agent (if None,
+                all acts available).
+
+
+        Return
+        -----------
+            action_probs: (torch.Tensor)
+        """
+
+        if self.mixed_action or self.multi_discrete:
+            action_probs = []
+
+            for action_out in self.action_outs:
+                action_logit = action_out(x)
+                action_prob = action_logit.probs
+                action_probs.append(action_prob)
+            
+            action_probs = torch.cat(action_probs, -1)
+        else:
+            action_logits = self.action_out(x, available_actions)
+            action_probs = action_logits.probs
+        
+        return action_probs
+    
+
     
