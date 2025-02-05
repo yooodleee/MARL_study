@@ -271,4 +271,46 @@ class R_Critic(nn.Module):
     
 
 
-    
+    def forward(
+            self,
+            cent_obs,
+            rnn_states,
+            masks):
+        
+        """
+        Compute actions from the given inputs.
+
+
+        Params
+        ------------
+            cent_obs: (np.ndarray / torch.Tensor)
+                observation inputs into network.
+            rnn_states: (np.ndarray / torch.Tensor)
+                if RNN network, hidden states for RNN.
+            masks: (np.ndarray / torch.Tensor)
+                mask tensor denoting if RNN states should be reinitialized 
+                to zeros.
+
+
+        Returns
+        -------------
+            values: (torch.Tensor)
+                value function predictions.
+            rnn_states: (torch.Tensor)
+                updated RNN hidden states.
+        """
+        cent_obs = check(cent_obs).to(**self.tpdv)
+        rnn_states = check(rnn_states).to(**self.tpdv)
+        masks = check(masks).to(**self.tpdv)
+
+        critic_features = self.base(**self.tpdv)
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            critic_features, rnn_states = self.rnn(
+                critic_features,
+                rnn_states,
+                masks,
+            )
+        values = self.v_out(critic_features)
+
+
+        return values, rnn_states
