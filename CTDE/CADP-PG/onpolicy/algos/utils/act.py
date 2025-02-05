@@ -201,4 +201,35 @@ class ACTLayer(nn.Module):
         return action_probs
     
 
-    
+    def evaluate_actions(
+            self,
+            x,
+            action,
+            available_actions=None,
+            active_masks=None):
+        
+        """
+        Compute log prob and entropy of given acts.
+
+
+        Params
+        ---------
+            x: (torch.Tensor)
+                input to network.
+            action: (torch.Tensor)
+                acts whose entropy and log prob to eval.
+            available_actions: (torch.Tensor)
+                denotes which acts are available to agent (if None,
+                all acts available).
+            active_masks: (torch.Tensor)
+                denotes whether an agent is active or dead.
+
+
+        Returns
+        -----------
+            action_log_probs: (torch.Tensor)
+                log probs of the input acts.
+            dist_entropy: (torch.Tensor)
+                act distribution entropy for the given inputs.
+        """
+        
