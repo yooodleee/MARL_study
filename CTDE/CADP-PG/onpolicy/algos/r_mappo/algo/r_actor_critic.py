@@ -203,3 +203,72 @@ class R_Actor(nn.Module):
     
 
 
+class R_Critic(nn.Module):
+    """
+    Critic network class for MAPPO.
+    Outputs value function predictions given centralized input (MAPPO)
+        or local observation (IPPO).
+
+
+    Params
+    -----------
+        args: (argparse.Namespace)
+            arguments containing relevant model info.
+        cent_obs_space: (gym.Space)
+            (centralized) observation space.
+        device: (torch.device)
+            specifies the device to run on (cpu/gpu).
+    """
+
+    def __init__(
+            self,
+            args,
+            cent_obs_space,
+            device=torch.device("cpu")):
+        
+        super(R_Critic, self).__init__()
+        self.hidden_size = args.hidden_size
+        self._use_orthogonal = args.use_orthogonal
+        self._use_naive_recurrent_policy = args.use_naive_recurrent_policy
+        self._use_recurrent_policy = args.use_recurrent_policy
+        self._recurrent_N = args.recurrent_N
+        self._use_popart = args.use_popart
+        self.tpdv = dict(dtype=torch.float32, device=device)
+        init_method = [
+            nn.init.xavier_normal_,
+            nn.init.orthogonal_
+        ][self._use_orthogonal]
+
+        cent_obs_shape = get_shape_from_obs_space(cent_obs_space)
+        base = CNNBase if len(cent_obs_shape) == 3 else MLPBase
+        self.base = base(args, cent_obs_shape)
+
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            self.rnn = RNNLayer(
+                self.hidden_size,
+                self.hidden_size,
+                self._recurrent_N,
+                self._use_orthogonal,
+            )
+
+        def init_(m):
+            return init(
+                m,
+                init_method,
+                lambda x: nn.init.constant_(x, 0)
+            )
+        
+        if self._use_popart:
+            self.v_out = init_(
+                PopArt(self.hidden_size, 1, device=device)
+            )
+        else:
+            self.v_out = init_(
+                nn.Linear(self.hidden_size, 1)
+            )
+
+        self.to(device)
+    
+
+
+    
