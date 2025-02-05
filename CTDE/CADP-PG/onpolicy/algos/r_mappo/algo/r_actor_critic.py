@@ -69,4 +69,67 @@ class R_Actor(nn.Module):
         self.to(device)
 
 
+    def forward(
+            self,
+            obs,
+            rnn_states,
+            masks,
+            available_actions=None,
+            deterministic=False):
+        
+        """
+        Compute actions from the given inputs.
+
+
+        Params
+        ----------
+            obs: (np.ndarray / torch.Tensor)
+                observation inputs into network.
+            rnn_states: (np.ndarray / torch.Tensor)
+                if RNN network, hidden states for RNN.
+            masks: (np.ndarray / torch.Tensor)
+                mask tensor denoting if hidden states should be reinitialized
+                to zeros.
+            available_actions: (np.ndarray / torch.Tensor)
+                denotes which actions are available to agent (if None, all
+                actions available).
+            deterministic: (bool)
+                whether to sample from action distribution or return the mode.
+
+
+        Returns
+        -----------
+            actions: (torch.Tensor)
+                actions to take.
+            action_log_probs: (torch.Tensor)
+                log probs of taken actions.
+            rnn_states: (torch.Tensor)
+                updated RNN hidden states.            
+        """
+        obs = check(obs).to(**self.tpdv)
+        rnn_states = check(rnn_states).to(**self.tpdv)
+        masks = check(masks).to(**self.tpdv)
+
+        if available_actions is not None:
+            available_actions = check(available_actions).to(**self.tpdv)
+        
+        actor_features = self.base(obs)
+
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            actor_features, rnn_states = self.rnn(
+                actor_features, 
+                rnn_states, 
+                masks
+            )
+
+        actions, action_log_probs = self.act(
+            actor_features,
+            available_actions,
+            deterministic,
+        )
+
+        return actions, action_log_probs, rnn_states
+    
+
+
     
