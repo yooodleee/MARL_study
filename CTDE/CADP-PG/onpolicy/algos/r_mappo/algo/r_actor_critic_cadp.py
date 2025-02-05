@@ -234,4 +234,99 @@ class R_Actor(nn.Module):
     
 
 
+    def evaluate_actions(
+            self,
+            obs,
+            rnn_states,
+            action,
+            masks,
+            available_actions=None,
+            active_masks=None):
+        
+        """
+        Compute log prob and entropy of given acts.
+
+
+        Params
+        ----------
+            obs: (torch.Tensor)
+                observation inputs into network.
+            action: (torch.Tensor)
+                acts whose entropy and log prob to eval.
+            rnn_states: (torch.Tensor)
+                if RNN network, hidden states for RNN.
+            masks: (torch.Tensor)
+                mask tensor denoting if hidden states should be reinitialized
+                to zeros.
+            available_actions: (torch.Tensor)
+                denotes which acts are available to agent (if None, all acts
+                available).
+            active_mask: (torch.Tensor)
+                denotes whether an agent is active or dead.
+
+
+        Returns
+        ------------
+            action_log_probs: (torch.Tensor)
+                log probs of the input acts.
+            dist_entropy: (torch.Tensor)
+                action distribution entropy for the given inputs.
+        """
+
+        obs = check(obs).to(**self.tpdv)
+        rnn_states = check(rnn_states).to(**self.tpdv)
+        action = check(action).to(**self.tpdv)
+        masks = check(masks).to(**self.tpdv)
+
+        if available_actions is not None:
+            available_actions = check(available_actions).to(**self.tpdv)
+        
+        if active_masks is not None:
+            active_masks = check(active_masks).to(**self.tpdv)
+        
+        actor_features = self.base(obs)
+
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            actor_features, rnn_states = self.rnn(
+                actor_features,
+                rnn_states,
+                masks,
+            )
+
+
+        # ATT
+        att_features = self.att(
+            obs.view(-1, self.num_agents, self.obs_dim)
+        )
+
+        if self.use_att_v:
+            att_features = F.relu(
+                self.fc1(self.att.values),
+                inplace=True
+            ).view(-1, self.hidden_size)
+        else:
+            att_features = F.relu(
+                self.fc1(att_features),
+                inplace=True
+            ).view(-1, self.hidden_size)
+        
+        actor_features = torch.cat(
+            (actor_features, att_features), dim=-1
+        )
+        # actor_features = att_features
+
+        actor_features = self.fc2(actor_features)
+
+        action_log_probs, dist_entropy = self.act.evaluate_actions(
+            actor_features,
+            action,
+            available_actions,
+            active_masks=active_masks
+            if self._use_policy_active_masks
+            else None
+        )
+
+        return action_log_probs, dist_entropy
     
+
+
