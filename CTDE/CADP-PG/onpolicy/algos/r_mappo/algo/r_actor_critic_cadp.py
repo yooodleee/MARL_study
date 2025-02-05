@@ -152,4 +152,86 @@ class R_Actor(nn.Module):
 
 
     
+    def forward(
+            self,
+            obs,
+            rnn_states,
+            masks,
+            available_actions=None,
+            deterministic=False):
+        
+        """
+        Compute acts from the given inputs.
+
+
+        Params
+        ------------
+            obs: (np.ndarray / torch.Tensor)
+                observation inputs into network.
+            rnn_states: (np.ndarray / torch.Tensor)
+                if RNN network, hidden states for RNN.
+            masks: (np.ndarray / torch.Tensor)
+                mask tensork if hidden states should be reinitialized
+                to zeros.
+            available_actions: (np.ndarray / torch.Tensor)
+                denotes which actions are available to agent (if None,
+                all actions available).
+            deterministic: (bool)
+                whether to sample from action distribution or return the mode.
+
+
+        Returns
+        ------------
+            actions: (torch.Tensor)
+                actions to take.
+            action_log_probs: (torch.Tensor)
+                log probs of taken acts.
+            rnn_states: (torch.Tensor)
+                updated RNN hidden states.
+        """
+        obs = check(obs).to(**self.tpdv)
+        rnn_states = check(rnn_states).to(**self.tpdv)
+        masks = check(masks).to(**self.tpdv)
+
+        if available_actions is not None:
+            available_actions = check(available_actions).to(**self.tpdv)
+
+        actor_features = self.base(obs)
+
+        if self._use_naive_recurrent_policy or self._use_recurrent_policy:
+            actor_features, rnn_states = self.rnn(
+                actor_features,
+                rnn_states,
+                masks,
+            )
+
+        # ATT
+        att_features = self.att(obs.view(-1, self.num_agents, self.obs_dim))
+
+        if self.use_att_v:
+            att_features = F.relu(
+                self.fc1(self.att.values),
+                inplace=True
+            ).view(-1, self.hidden_size)
+        
+        else:
+            att_features = F.relu(
+                self.fc1(att_features),
+                inplace=True
+            ).view(-1, self.hidden_size)
+        
+        actor_features = torch.cat((actor_features, att_features), dim=-1)
+        # actor_features = att_features
+
+        actor_features = self.fc2(actor_features)
+        actions, action_log_probs = self.act(
+            actor_features,
+            available_actions,
+            deterministic,
+        )
+
+        return actions, action_log_probs, rnn_states
+    
+
+
     
