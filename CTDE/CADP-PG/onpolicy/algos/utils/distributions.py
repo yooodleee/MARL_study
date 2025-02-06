@@ -181,3 +181,12 @@ class Bernoulli(nn.Module):
 
 
 
+class AddBias(nn.Module):
+
+    def __init__(self, bias):
+        super(AddBias, self).__init__()
+
+        self._bias = nn.Parameter(bias.unsqueeze(1))
+    
+
+    
