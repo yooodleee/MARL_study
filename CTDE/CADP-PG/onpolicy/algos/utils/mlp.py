@@ -53,4 +53,13 @@ class MLPLayer(nn.Module):
         self.fc2 = get_clones(self.fc_h, self._layer_N)
     
 
+    def forward(self, x):
+        x = self.fc1(x)
+        
+        for i in range(self._layer_N):
+            x = self.fc2[i](x)
+        
+        return x
     
+
+
