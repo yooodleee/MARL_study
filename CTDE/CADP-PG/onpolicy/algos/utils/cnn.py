@@ -75,4 +75,12 @@ class CNNLayer(nn.Module):
         )
 
     
+    def forward(self, x):
+        x = x / 255.0
+        x = self.cnn(x)
+
+        return x
     
+
+
+
