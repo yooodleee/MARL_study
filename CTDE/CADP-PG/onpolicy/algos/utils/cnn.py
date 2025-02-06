@@ -83,4 +83,21 @@ class CNNLayer(nn.Module):
     
 
 
+class CNNBase(nn.Module):
 
+    def __init__(self, args, obs_shape):
+        super(CNNBase, self).__init__()
+
+        self._use_orthogonal = args.use_orthogonal
+        self._use_ReLU = args.use_ReLU
+        self.hidden_size = args.hidden_size
+
+        self.cnn = CNNLayer(
+            obs_shape,
+            self.hidden_size,
+            self._use_orthogonal,
+            self._use_ReLU,
+        )
+
+    
+    
