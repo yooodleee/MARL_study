@@ -32,5 +32,8 @@ class FixedCategorical(torch.distributions.Categorical):
             .unsqueeze(-1)
         )
     
+    def mode(self):
+        return self.probs.argmax(dim=-1, keepdim=True)
 
-    
+
+
