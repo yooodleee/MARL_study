@@ -96,4 +96,10 @@ class MLPBase(nn.Module):
         )
 
     
-    
+    def forward(self, x):
+        if self._use_feature_normalization:
+            x = self.feature_norm(x)
+
+        x = self.mlp(x)
+
+        return x
