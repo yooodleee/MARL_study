@@ -112,3 +112,29 @@ class Categorical(nn.Module):
 
 
 
+class DiagGaussian(nn.Module):
+
+    def __init__(
+            self,
+            num_inputs,
+            num_outputs,
+            use_orthogonal=True,
+            gain=0.01):
+        
+        super(DiagGaussian, self).__init__()
+
+        init_method = [nn.init.xavier_uniform_, nn.init.orthogonal_][use_orthogonal]
+
+        def init_(m):
+            return init(
+                m,
+                init_method,
+                lambda x: nn.init.constant_(x, 0),
+                gain
+            )
+        
+        self.fc_mean = init_(nn.Linear(num_inputs, num_outputs))
+        self.logstd = AddBias(torch.zeros(num_outputs))
+    
+
+    
