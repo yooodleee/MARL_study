@@ -68,4 +68,36 @@ class PopArt(torch.nn.Module):
         )
     
 
+    @torch.no_grad()
+    def update(self, input_vector):
+
+        if type(input_vector) == np.ndarray:
+            input_vector = torch.from_numpy(input_vector)
+        
+        input_vector  = input_vector.to(**self.tpdv)
+
+        old_mean, old_var = self.debiased_mean_var()
+        old_stddev = torch.sqrt(old_var)
+
+        batch_mean = input_vector.mean(
+            dim=tuple(range(self.norm_axes))
+        )
+        batch_sq_mean = (input_vector ** 2).mean(
+            dim=tuple(range(self.norm_axes))
+        )
+
+        self.mean.mul_(self.beta).add_(batch_mean * (1.0 - self.beta))
+        self.mean_sq.mul_(self.beta).add_(batch_sq_mean * (1.0 - self.beta))
+        self.debiasing_term.mul_(self.beta).add_(1.0 * (1.0 - self.beta))
+
+
+        self.sttdev = (self.mean_sq - self.mean ** 2).sqrt().clamp(min=1e-4)
+
+        new_mean, new_var = self.debiased_mean_var()
+        new_sttdev = torch.sqrt(new_var)
+
+        self.weight = self.weight * old_stddev / new_sttdev
+        self.bias = (old_stddev * self.bias + old_mean - new_mean) / new_sttdev
+    
+
     
