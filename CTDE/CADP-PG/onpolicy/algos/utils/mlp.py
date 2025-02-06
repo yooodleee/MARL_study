@@ -63,3 +63,37 @@ class MLPLayer(nn.Module):
     
 
 
+class MLPBase(nn.Module):
+
+    def __init__(
+            self,
+            args,
+            obs_shape,
+            cat_self=True,
+            attn_internal=False):
+        
+        super(MLPBase, self).__init__()
+
+        self._use_feature_normalization = args.use_feature_normalization
+        self._use_orthogonal = args.use_orthogonal
+        self._use_ReLU = args.use_ReLU
+        self._stacked_frames = args.use_ReLU
+        self._layer_N = args.layer_N
+        self.hidden_size = args.hidden_size
+
+        obs_dim = obs_shape[0]
+
+        if self._use_feature_normalization:
+            self.feature_norm = nn.LayerNorm(obs_dim)
+        
+
+        self.mlp = MLPLayer(
+            obs_dim,
+            self.hidden_size,
+            self._layer_N,
+            self._use_orthogonal,
+            self._use_ReLU
+        )
+
+    
+    
