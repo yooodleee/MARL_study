@@ -48,4 +48,8 @@ class FixedNormal(torch.distributions.Normal):
         return self.entropy().sum(-1)
     
 
-    
+    def mode(self):
+        return self.mean
+
+
+
