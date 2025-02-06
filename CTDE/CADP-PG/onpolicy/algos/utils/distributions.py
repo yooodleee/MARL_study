@@ -64,4 +64,8 @@ class FixedBernoulli(torch.distributions.Bernoulli):
             .unsqueeze(-1)
     
 
+    def entropy(self):
+        return super().entropy().sum(-1)
+    
+
     
