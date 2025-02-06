@@ -37,3 +37,11 @@ class FixedCategorical(torch.distributions.Categorical):
 
 
 
+# Normal
+class FixedNormal(torch.distributions.Normal):
+
+    def log_probs(self, actions):
+        return super().log_prob(actions).sum(-1, keepdim=True)
+    
+
+    
