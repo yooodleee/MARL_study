@@ -100,4 +100,7 @@ class CNNBase(nn.Module):
         )
 
     
-    
+    def forward(self, x):
+        x = self.cnn(x)
+
+        return x
