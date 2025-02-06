@@ -39,4 +39,19 @@ class PopArt(torch.nn.Module):
         self.reset_parameters()
 
 
+    def reset_parameters(self):
+        torch.nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+
+        if self.bias is not None:
+            fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(
+                self.weight
+            )
+            bound = 1 / math.sqrt(fan_in)
+            torch.nn.init.uniform_(self.bias, -bound, bound)
+        
+        self.mean.zero_()
+        self.mean_sq.zero_()
+        self.debiasing_term.zero_()
+    
+
     
