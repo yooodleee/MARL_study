@@ -53,3 +53,15 @@ class FixedNormal(torch.distributions.Normal):
 
 
 
+# Bernoulli
+class FixedBernoulli(torch.distributions.Bernoulli):
+
+    def log_probs(self, actions):
+        return super\
+            .log_prob(actions)\
+            .view(actions.size(0), -1)\
+            .sum(-1)\
+            .unsqueeze(-1)
+    
+
+    
