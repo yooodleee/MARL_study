@@ -54,4 +54,18 @@ class PopArt(torch.nn.Module):
         self.debiasing_term.zero_()
     
 
+    def forward(self, input_vector):
+
+        if type(input_vector) == np.ndarray:
+            input_vector = torch.from_numpy(input_vector)
+        
+        input_vector = input_vector.to(**self.tpdv)
+
+        return F.linear(
+            input_vector,
+            self.weight,
+            self.bias
+        )
+    
+
     
