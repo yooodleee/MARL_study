@@ -25,3 +25,8 @@ def get_clones(module, N):
     )
 
 
+def check(input):
+    output = torch.from_numpy(input) \
+            if type(input) == np.ndarray else input
+    
+    return output
