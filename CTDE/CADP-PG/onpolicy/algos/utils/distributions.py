@@ -68,4 +68,8 @@ class FixedBernoulli(torch.distributions.Bernoulli):
         return super().entropy().sum(-1)
     
 
-    
+    def mode(self):
+        return torch.gt(self.probs, 0.5).float()
+
+
+
