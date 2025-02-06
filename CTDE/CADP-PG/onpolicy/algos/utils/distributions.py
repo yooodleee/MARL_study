@@ -137,4 +137,16 @@ class DiagGaussian(nn.Module):
         self.logstd = AddBias(torch.zeros(num_outputs))
     
 
-    
+    def forward(self, x):
+        action_mean = self.fc_mean(x)
+
+        zeros = torch.zeros(action_mean.size())
+        if x.is_cuda:
+            zeros = zeros.cuda()
+        
+        action_logstd = self.logstd(zeros)
+
+        return FixedNormal(action_mean, action_logstd.exp())
+
+
+
