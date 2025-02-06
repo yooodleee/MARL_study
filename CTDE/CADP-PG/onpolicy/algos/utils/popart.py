@@ -100,4 +100,12 @@ class PopArt(torch.nn.Module):
         self.bias = (old_stddev * self.bias + old_mean - new_mean) / new_sttdev
     
 
+    def debiased_mean_var(self):
+        debiased_mean = self.mean / self.debiasing_term.clamp(min=self.epsilon)
+        debiased_mean_sq = self.mean_sq / self.debiasing_term.clamp(min=self.epsilon)
+        debiased_var = (debiased_mean_sq - debiased_mean ** 2).clamp(min=1e-2)
+
+        return debiased_mean, debiased_var
+    
+
     
