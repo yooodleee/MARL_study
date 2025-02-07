@@ -293,4 +293,13 @@ class GuardSubprocVecEnv(ShareVecEnv):
         self.waiting = True
     
 
+    def step_wait(self):
+        results = [remote.recv() for remote in self.remotes]
+        self.waiting = False
+
+        obs, rews, dones, infos = zip(*results)
+
+        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+    
+
     
