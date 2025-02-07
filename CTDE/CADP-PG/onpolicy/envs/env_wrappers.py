@@ -150,4 +150,11 @@ class ShareVecEnv(ABC):
             raise NotImplementedError
     
 
+    def get_images(self):
+        """
+        Return RGB images from each env.
+        """
+        raise NotImplementedError
+    
+
     
