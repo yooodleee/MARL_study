@@ -397,4 +397,58 @@ class SubprocVecEnv(ShareVecEnv):
         self.waiting = True
     
 
+    def step_wait(self):
+        results = [remote.recv() for remote in self.remotes]
+        self.waiting = False
+
+        obs, rews, dones, infos = zip(*results)
+
+        return np.stack(obs), np.stack(rews), np.stack(dones), infos
     
+
+    def reset(self):
+        for remote in self.remotes:
+            remote.send(('reset', None))
+        
+        obs = [remote.recv() for remote in self.remotes]
+
+        return np.stack(obs)
+    
+
+    def reset_task(self):
+        for remote in self.remotes:
+            remote.send(('reset_task', None))
+        
+        return np.stack(
+            [remote.recv() for remote in self.remotes]
+        )
+    
+
+    def close(self):
+        if self.closed:
+            return
+        
+        if self.waiting:
+            for remote in self.remotes:
+                remote.recv()
+        
+        for remote in self.remotes:
+            remote.send(('close', None))
+        
+        for p in self.ps:
+            p.join()
+        
+        self.closed = True
+    
+
+    def render(self, mode='rgb_array'):
+        for remote in self.remotes:
+            remote.send(('render', mode))
+        
+        if mode == 'rgb_array':
+            frame = [remote.recv() for remte in self.remotes]
+        
+            return np.stack(frame)
+
+
+
