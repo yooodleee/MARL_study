@@ -302,4 +302,13 @@ class GuardSubprocVecEnv(ShareVecEnv):
         return np.stack(obs), np.stack(rews), np.stack(dones), infos
     
 
+    def reset(self):
+        for remote in self.remotes:
+            remote.send(('reset', None))
+        
+        obs = [remote.recv() for remote in self.remotes]
+
+        return np.stack(obs)
+    
+
     
