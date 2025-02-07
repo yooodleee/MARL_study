@@ -35,3 +35,32 @@ class CloudpickleWrapper(object):
 
 
 
+class ShareVecEnv(ABC):
+    """
+    An obstract asynchronous, vectorized env. Used to batch data from multiple
+        copies of an env, so that each obs becomes an batch of obs, and expected
+        act is a batch of act to be applied per-env.
+    """
+
+    closed = False
+    viewer = None
+
+    metadata = {
+        'render.modes': ['human', 'rgb_array']
+    }
+
+    
+    def __init__(
+            self,
+            num_envs,
+            observation_space,
+            share_observation_space,
+            action_space):
+        
+        self.num_envs = num_envs
+        self.observation_space = observation_space
+        self.share_observation_space = share_observation_space
+        self.action_space = action_space
+    
+
+    
