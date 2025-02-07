@@ -311,4 +311,13 @@ class GuardSubprocVecEnv(ShareVecEnv):
         return np.stack(obs)
     
 
+    def reset_task(self):
+        for remote in self.remotes:
+            remote.send(('reset_task', None))
+        
+        return np.stack(
+            [remote.recv() for remote in self.remotes]
+        )
+    
+
     
