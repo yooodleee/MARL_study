@@ -792,3 +792,56 @@ class ChooseSimpleSubprocVecEnv(ShareVecEnv):
 
 
 
+def chooseworker(
+        remote,
+        parent_remote,
+        env_fn_wrapper):
+    
+    parent_remote.close()
+    env = env_fn_wrapper.x()
+
+    while True:
+        cmd, data = remote.recv()
+
+        if cmd == 'step':
+            ob, s_ob, reward, done, \
+            info, available_actions = env.step(data)
+
+            remote.send(
+                (
+                    ob, s_ob, reward, done, 
+                    info, available_actions
+                )
+            )
+
+        elif cmd == 'reset':
+            ob, s_ob, available_actions = env.reset(data)
+            remote.send((ob, s_ob, available_actions))
+        
+        elif cmd == 'reset_task':
+            ob = env.reset_task()
+            remote.send(ob)
+        
+        elif cmd == 'close':
+            env.close()
+            remote.close()
+            break
+
+        elif cmd == 'render':
+            remote.send(env.render(mode='rgb_array'))
+        
+        elif cmd == 'get_spaces':
+            remote.send(
+                (
+                    env.observation_space,
+                    env.share_observation_space,
+                    env.action_space
+                )
+            )
+
+        else:
+            raise NotImplementedError
+
+
+
+
