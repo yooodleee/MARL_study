@@ -320,4 +320,22 @@ class GuardSubprocVecEnv(ShareVecEnv):
         )
     
 
-    
+    def close(self):
+        if self.closed:
+            return
+        
+        if self.waiting:
+            for remote in self.remotes:
+                remote.recv()
+        
+        for remote in self.remotes:
+            remote.send(('close', None))
+        
+        for p in self.ps:
+            p.join()
+        
+        self.closed = True
+
+
+
+
