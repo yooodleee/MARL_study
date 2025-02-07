@@ -452,3 +452,67 @@ class SubprocVecEnv(ShareVecEnv):
 
 
 
+def shareworker(
+        remote,
+        parent_remote,
+        env_fn_wrapper):
+    
+    parent_remote.close()
+    env = env_fn_wrapper.x()
+
+    while True:
+        cmd, data = remote.recv()
+        if cmd == 'step':
+            ob, s_ob, reward, done, \
+            info, available_actions = env.step(data)
+
+            if 'bool' in done.__class__.__name__:
+                if done:
+                    ob, s_ob, available_actions = env.reset()
+            
+            else:
+                if np.all(done):
+                    ob, s_ob, available_actions= env.reset()
+            
+            remote.send(
+                (
+                    ob, s_ob, reward, done, info, available_actions
+                )
+            )
+            
+        elif cmd == 'reset':
+            ob, s_ob, available_actions = env.reset()
+            remote.send((ob, s_ob, available_actions))
+        
+        elif cmd == 'reset_task':
+            ob = env.reset_task()
+            remote.send(ob)
+        
+        elif cmd == 'render':
+            if data == 'rgb_array':
+                fr = env.render(mode=data)
+                remote.send(fr)
+            
+            elif data == 'human':
+                env.render(mode=data)
+        
+        elif cmd == 'close':
+            env.close()
+            remote.close()
+            break
+
+        elif cmd == 'get_spaces':
+            remote.send(
+                (
+                    env.observation_space,
+                    env.share_observation_space,
+                    env.action_space
+                )
+            )
+
+        elif cmd == 'render_vulnerability':
+            fr = env.render_vulnerability(data)
+            remote.send((fr))
+        
+        else:
+            raise NotImplementedError
