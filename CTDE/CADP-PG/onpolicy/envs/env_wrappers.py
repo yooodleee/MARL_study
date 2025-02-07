@@ -166,4 +166,15 @@ class ShareVecEnv(ABC):
             return self
     
 
-    
+    def get_viewer(self):
+        if self.viewer is None:
+            
+            from gym.envs.classic_control import rendering
+            
+            self.viewer = rendering.SimpleImageViewer()
+        
+        return self.viewer
+
+
+
+
