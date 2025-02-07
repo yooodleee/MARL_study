@@ -124,4 +124,14 @@ class ShareVecEnv(ABC):
         self.closed = True
 
 
+    def step(self, actions):
+        """
+        Step the envs synchronously.
+        This is available for backwards compatibility.
+        """
+        self.step_async(actions)
+
+        return self.step_wait()
+    
+
     
