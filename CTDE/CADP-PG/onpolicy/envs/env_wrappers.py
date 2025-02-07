@@ -73,4 +73,16 @@ class ShareVecEnv(ABC):
         """
         pass
 
+
+    @abstractmethod
+    def step_async(self, actions):
+        """
+        Tell all the envs to start talking a step with the given acts.
+        Call step_wait() to get the results of the step.
+
+        Should not call this if a step_async run is already pending.
+        """
+        pass
+
+
     
