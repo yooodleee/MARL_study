@@ -178,3 +178,60 @@ class ShareVecEnv(ABC):
 
 
 
+def worker(
+        remote,
+        parent_remote,
+        env_fn_wrapper):
+    
+    parent_remote.close()
+    env = env_fn_wrapper.x()
+
+    while True:
+        cmd, data = remote.recv()
+        if cmd == 'step':
+            ob, reward, done, info = env.step(data)
+
+            if 'bool' in done.__class__.__name__:
+                if done:
+                    ob = env.reset()
+            else:
+                if np.all(done):
+                    ob = env.reset()
+            
+            remote.send((ob, reward, done, info))
+        
+        elif cmd == 'reset':
+            ob = env.reset()
+            remote.send((ob))
+        
+        elif cmd == 'render':
+            if data == 'rgb_array':
+                fr = env.render(mode=data)
+                remote.send(fr)
+            
+            elif data == 'humna':
+                env.render(mode=data)
+        
+        elif cmd == 'reset_task':
+            ob = env.reset_task()
+            remote.send(ob)
+        
+        elif cmd == 'close':
+            env.close()
+            remote.close()
+            break
+
+        elif cmd == 'get_spaces':
+            remote.send(
+                (
+                    env.observation_space,
+                    env.share_observation_space,
+                    env.action_space
+                )
+            )
+        else:
+            raise NotImplementedError
+
+
+
+
