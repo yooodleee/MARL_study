@@ -390,4 +390,11 @@ class SubprocVecEnv(ShareVecEnv):
         )
 
 
+    def step_async(self, actions):
+        for remote, action in zip(self.remotes, actions):
+            remote.send(('step', action))
+        
+        self.waiting = True
+    
+
     
