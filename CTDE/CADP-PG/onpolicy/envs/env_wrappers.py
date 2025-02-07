@@ -339,3 +339,55 @@ class GuardSubprocVecEnv(ShareVecEnv):
 
 
 
+class SubprocVecEnv(ShareVecEnv):
+
+    def __init__(
+            self,
+            env_fns,
+            spaces=None):
+        
+        """
+        envs:
+            list of gym envs to run in subprocesses.
+        """
+
+        self.waiting = False
+        self.closed = False
+
+        nenvs = len(env_fns)
+
+        self.remotes, self.work_remotes = zip(
+            *[Pipe() for _ in range(nenvs)]
+        )
+        self.ps = [
+            Process(
+                target=worker,
+                args=(work_remote, remote, CloudpickleWrapper(env_fn))
+            )
+            for (work_remote, remote, env_fn)
+            in zip(self.work_remotes, self.remotes, env_fns)
+        ]
+
+        for p in self.ps:
+            p.daemon = True # if the main process crashes, should not cause things to hang
+            p.start()
+        
+        for remote in self.work_remotes:
+            remote.close()
+        
+        self.remotes[0].send(('get_spaces', None))
+
+        observation_space, \
+        share_observation_space, \
+        action_space = self.remotes[0].recv()
+
+        ShareVecEnv.__init__(
+            self,
+            len(env_fns),
+            observation_space,
+            share_observation_space,
+            action_space
+        )
+
+
+    
