@@ -85,4 +85,24 @@ class ShareVecEnv(ABC):
         pass
 
 
+    @abstractmethod
+    def step_wait(self):
+        """
+        Wait for the step taken with step_async().
+
+        
+        Returns: (obs, rews, dones, infos)
+        ---------------------------------------
+            obs:
+                an array of obs, or a dict of arrays of obs.
+            rews:
+                an array of rewards.
+            dones:
+                an array of "episode done" booleans.
+            infos:
+                a sequence of info objects.
+        """
+        pass
+
+
     
