@@ -1172,3 +1172,86 @@ class DummyVecEnv(ShareVecEnv):
 
 
 
+class ShareDummyVecEnv(ShareVecEnv):
+
+    def __init__(self, env_fns):
+        self.envs = [fn() for fn in env_fns]
+        env = self.envs[0]
+
+        ShareVecEnv.__init__(
+            self,
+            len(env_fns),
+            env.observation_space,
+            env.share_observation_space,
+            env.action_space
+        )
+        self.actions = None
+
+    
+    def step_async(self, actions):
+        self.actions = actions
+    
+
+    def step_wait(self):
+        results = [
+            env.step(a)
+            for (a, env)
+            in zip(self.actions, self.envs)
+        ]
+
+        obs, share_obs, rews, dones, \
+        infos, available_actions = map(np.array, zip(*results))
+
+
+        for (i, done) in enumerate(dones):
+            if 'bool' in done.__class__.__name__:
+                if done:
+                    obs[i], \
+                    share_obs[i], \
+                    available_actions[i] = self.envs[i].reset()
+            
+            else:
+                if np.all(done):
+                    obs[i], \
+                    share_obs[i], \
+                    available_actions[i] = self.envs[i].reset()
+        
+        self.actions = None
+
+        return obs, share_obs, rews, dones, infos, available_actions
+    
+
+    def reset(self):
+        results = [env.reset() for env in self.envs]
+        obs, \
+        share_obs, \
+        available_actions = map(np.array, zip(*results))
+
+        return obs, share_obs, available_actions
+    
+
+    def close(self):
+        for env in self.envs:
+            env.close()
+    
+
+    def render(self, mode='human'):
+        if mode == 'rgb_array':
+            
+            return np.array(
+                [
+                    env.render(mode=mode)
+                    for env in self.envs
+                ]
+            )
+        
+        elif mode == 'human':
+            for env in self.envs:
+                env.render(mode=mode)
+        
+        else:
+            raise NotImplementedError
+
+
+
+
