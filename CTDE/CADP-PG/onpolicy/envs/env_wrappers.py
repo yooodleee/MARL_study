@@ -22,4 +22,10 @@ class CloudpickleWrapper(object):
         self.x = x
     
 
+    def __getstate__(self):
+        import cloudpickle
+        
+        return cloudpickle.dumps(self.x)
+    
+
     
