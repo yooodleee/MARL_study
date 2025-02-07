@@ -28,4 +28,10 @@ class CloudpickleWrapper(object):
         return cloudpickle.dumps(self.x)
     
 
-    
+    def __setstate__(self, ob):
+        import pickle
+
+        self.x = pickle.loads(ob)
+
+
+
