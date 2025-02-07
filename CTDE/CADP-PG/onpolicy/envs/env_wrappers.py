@@ -63,4 +63,14 @@ class ShareVecEnv(ABC):
         self.action_space = action_space
     
 
+    @abstractmethod
+    def reset(self):
+        """
+        Reset all the envs and return an array of obs, or a dict 
+            of observation arrays. If step_async is still work,
+            that work will be cancelled and step_wait() should 
+            not be called until step_async() is invoked again.
+        """
+        pass
+
     
