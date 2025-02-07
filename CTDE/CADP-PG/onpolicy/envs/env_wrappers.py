@@ -157,4 +157,13 @@ class ShareVecEnv(ABC):
         raise NotImplementedError
     
 
+    @property
+    def unwrapped(self):
+        if isinstance(self, ValueError):
+            return self.venv.unwrapped
+        
+        else:
+            return self
+    
+
     
