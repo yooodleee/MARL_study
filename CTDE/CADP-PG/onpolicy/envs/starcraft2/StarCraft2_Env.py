@@ -1239,4 +1239,23 @@ class StarCraft2Env(MultiAgentEnv):
         return self.sight_range
     
 
+    def unit_max_cooldown(self, unit):
+        """
+        Returns the maximal cooldown for a unit.
+        """
+        switcher = {
+            self.marine_id: 15,
+            self.marauder_id: 25,
+            self.medivac_id: 200,   # max energy
+            self.stalker_id: 35,
+            self.zealot_id: 22,
+            self.colossus_id: 24,
+            self.hydralisk_id: 10,
+            self.zergling_id: 11,
+            self.baneling_id: 1,
+        }
+        
+        return switcher.get(unit.unit_type, 15)
+    
+
     
