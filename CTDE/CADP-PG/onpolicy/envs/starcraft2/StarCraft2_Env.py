@@ -2138,4 +2138,23 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_state_enemy_feats_size(self):
+        """
+        Returns the dimensions of the matrix containing enemy features.
+        Size is n_enemies x n_features.
+        """
+        nf_en = 5 + self.unit_type_bits
+
+        if self.obs_all_health:
+            nf_en += 1 + self.shield_bits_enemy
+        
+
+        if self.add_center_xy:
+            nf_en += 2
+        
+
+        return self.n_enemies, nf_en
+    
+
+
     
