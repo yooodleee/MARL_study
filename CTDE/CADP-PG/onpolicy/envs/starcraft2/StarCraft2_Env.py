@@ -463,4 +463,90 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def reset(self):
+        """
+        Reset the env. Required after each full episode.
+        Returns initial obs and states.
+        """
+        self._episode_steps = 0
+
+        if self._episode_count == 0:
+
+            # Launch StarCraft II
+            self._launch()
+        else:
+            self._reset()
+        
+
+        # Info kept for counting the reward
+        self.death_tracker_ally = np.zeros(self.n_agents, dtype=np.float32)
+        self.death_tracker_enemy = np.zeros(self.n_enemies, dtype=np.float32)
+        self.previous_ally_units = None
+        self.previous_enemy_units = None
+        self.win_counted = False
+        self.defeat_counted = False
+
+        self.last_action = np.zeros(
+            (self.n_agents, self.n_actions),
+            dtype=np.float32
+        )
+
+
+        if self.heuristic_ai:
+            self.heuristic_targets = [None] * self.n_agents
+        
+
+        try:
+            self._obs = self._controller.observe()
+            self.init_units()
+        except (protocol.ProtocolError, protocol.ConnectionError):
+            self.full_restart()
+        
+
+        available_actions = []
+        for i in range(self.n_agents):
+            available_actions.append(self.get_avail_agent_actions(i))
+        
+
+        if self.debug:
+            logging.debug(
+                "Started Episode {}"
+                .format(self._episode_count).center(60, "*")
+            )
+        
+
+        if self.use_state_agent:
+            global_state = [
+                self.get_state_agent(agent_id)
+                for agent_id in range(self.n_agents)
+            ]
+        else:
+            global_state = [
+                self.get_state(agent_id)
+                for agent_id in range(self.n_agents)
+            ]
+        
+        local_obs = self.get_obs()
+
+
+        if self.use_stacked_frames:
+            self.stacked_local_obs = np.roll(
+                self.stacked_local_obs, 1, axis=1
+            )
+            self.stacked_global_state = np.roll(
+                self.stacked_global_state, 1, axis=1
+            )
+
+            local_obs = self.stacked_local_obs.reshape(
+                self.n_agents, -1
+            )
+            global_state = self.stacked_global_state.reshape(
+                self.n_agents, -1
+            )
+        
+
+        return local_obs, global_state, available_actions
+    
+
+
     
