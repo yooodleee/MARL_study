@@ -549,4 +549,21 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def _restart(self):
+        """
+        Restart the env by killing all units on the map.
+        There is a trigger in the SC2Map file, which restarts the
+            episode when there are no units left.
+        """
+        try:
+            self._kill_all_units()
+            self._controller.step(2)
+        except (
+            protocol.ProtocolError,
+            protocol.ConnectionError
+        ):
+            self.full_restart()
+    
+
+
     
