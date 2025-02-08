@@ -1619,4 +1619,66 @@ class StarCraft2Env(MultiAgentEnv):
         return agent_obs
     
 
-    
+    def get_state(self, agent_id=-1):
+        """
+        Returns the global state.
+        NOTE: This function should not be used during decentralized execution.
+        """
+        if self.obs_instead_of_state:
+            obs_concat = np.concatenate(self.get_obs(), axis=0).astype(np.float32)
+
+            return obs_concat
+        
+        
+        nf_al = 2 + self.shield_bits_ally + self.unit_type_bits
+        nf_en = 1 + self.shield_bits_enemy + self.unit_type_bits
+
+
+        if self.add_center_xy:
+            nf_al += 2
+            nf_en += 2
+
+
+        if self.add_distance_state:
+            nf_al += 1
+            nf_en += 1
+
+
+        if self.add_xy_state:
+            nf_al += 2
+            nf_en += 2
+
+
+        if self.add_visible_state:
+            nf_al += 1
+            nf_en += 1
+
+
+        if self.state_last_action:
+            nf_al += self.n_actions
+            nf_en += self.n_actions
+
+
+        if self.add_enemy_action_state:
+            nf_en += 1
+
+
+        nf_mv = self.get_state_move_feats_size()
+
+
+        ally_state = np.zeros((self.n_agents, nf_al), dtype=np.float32)
+        enemy_state = np.zeros((self.n_enemies, nf_en), dtype=np.float32)
+        move_state = np.zeros((1, nf_mv), dtype=np.float32)
+        agent_id_feats = np.zeros((self.n_agents, 1), dtype=np.float32)
+
+
+        center_x = self.map_x / 2
+        center_y = self.map_y / 2
+
+
+        unit = self.get_unit_by_id(agent_id)    # get the unit of some agent.
+        x = unit.pos.x
+        y = unit.pos.y
+        
+        sight_range = self.unit_sight_range(agent_id)
+        avail_actions = self.get_avail_agent_actions(agent_id)
