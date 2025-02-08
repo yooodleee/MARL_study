@@ -210,4 +210,166 @@ class StarCraft2Env(MultiAgentEnv):
         
         """
 
+        # map args
+        self.map_name = args.map_name
+        self.add_local_obs = args.add_local_obs
+        self.add_move_state = args.add_move_state
+        self.add_visible_state = args.add_visible_state
+        self.add_distance_state = args.add_distance_state
+        self.add_xy_state = args.add_xy_state
+        self.add_enemy_action_state = args.add_enemy_action_state
+        self.add_agent_id = args.add_agent_id
+        self.use_state_agent = args.use_state_agent
+        self.use_mustalive = args.use_mustalive
+        self.add_center_xy = args.add_center_xy
+        self.use_stacked_frames = args.use_stacked_frames
+        self.stacked_frames = args.stacked_frames
+        self.sight_range = args.sight_range
+
+
+        map_params = get_map_params(self.map_name)
+        self.n_agents = map_params['n_agents']
+        self.n_enemies = map_params['n_enemies']
+        self.episode_limit = map_params['limit']
+        self._move_amount = move_amount
+        self._step_mul = step_mul
+        self.difficulty = difficulty
+
+
+        # Observations and state
+        self.obs_own_health = obs_own_health
+        self.obs_all_health = obs_all_health
+        self.obs_instead_of_state = args.use_obs_instead_of_state
+        self.obs_last_action = obs_last_action
+
+        self.obs_pathing_grid = obs_pathing_grid
+        self.obs_terrain_height = obs_terrain_height
+        self.obs_timestep_number = obs_timestep_number
+        self.obs_agent_id = obs_agent_id
+        self.state_pathing_grid = state_pathing_grid
+        self.state_terrian_height = state_terrain_height
+        self.state_last_action = state_last_action
+        self.state_timestep_number = state_timestep_number
+        self.state_agent_id = state_agent_id
+
+        if self.obs_all_health:
+            self.obs_own_health = True
         
+        self.n_obs_pathing = 8
+        self.n_obs_height = 9
+
+
+        # Rewards args
+        self.reward_sparse = reward_sparse
+        self.reward_only_positive = reward_only_positive
+        self.reward_negative_scale = reward_negative_scale
+        self.reward_death_value = reward_death_value
+        self.reward_win = reward_win
+        self.reward_defeat = reward_defeat
+
+        self.reward_scale = reward_scale
+        self.reward_scale_rate = reward_scale_rate
+
+
+        # Other
+        self.game_version = game_version
+        self.continuing_episode = continuing_episode
+        self._seed = seed
+        self.heuristic_ai = heuristic_ai
+        self.heuristic_rest = heuristic_rest
+        self.debug = debug
+        self.window_size = (window_size_x, window_size_y)
+        self.replay_dir = replay_dir
+        self.replay_prefix = replay_prefix
+
+
+        # Actions
+        self.n_actions_no_attack = 6
+        self.n_actions_move = 4
+        self.n_actions = self.n_actions_no_attack + self.n_enemies
+
+
+        # Map info
+        self._agent_race = map_params['a_race']
+        self._bot_race = map_params['b_race']
+        self.shield_bits_ally = 1 if self._agent_race == 'P' else 0
+        self.shield_bits_enemy = 1 if self._bot_race == 'P' else 0
+        self.unit_type_bits = map_params['unit_type_bits']
+        self.map_type = map_params['map_type']
+
+        self.max_reward = (
+            self.n_enemies \
+            * self.reward_death_value \
+            + self.reward_win
+        )
+
+
+        self.agents = {}
+        self.enemies = {}
+        self._episode_count = 0
+        self._episode_steps = 0
+        self._total_steps = 0
+        self._obs = None
+        self.battles_won = 0
+        self.battles_game = 0
+        self.timeouts = 0
+        self.force_restarts = 0
+        self.last_stats = None
+        self.death_tracker_ally = np.zeros(self.n_agents, dtype=np.float32)
+        self.death_tracker_enemy = np.zeros(self.n_enemies, dtype=np.float32)
+        self.previous_ally_units = None
+        self.previous_enemy_units = None
+        self.last_actions = np.zeros(
+            (self.n_agents, self.n_actions),
+            dtype=np.float32
+        )
+        self._min_unit_type = 0
+        self.marine_id = self.marauder_id = self.medivac_id = 0
+        self.hydralisk_id = self.zergling_id = self.baneling_id = 0
+        self.stalker_id = self.colossus_id = self.zealot_id = 0
+        self.max_distance_x = 0
+        self.max_distance_y = 0
+        self.map_x = 0
+        self.map_y = 0
+        self.terrain_height = None
+        self.pathing_grid = None
+        self._run_config = None
+        self._sc2_proc = None
+        self._controller = None
+
+
+        # Try to avoid leaking SC2 processes on shutdown
+        atexit.register(lambda: self.close())
+
+
+        self.action_space = []
+        self.observation_space = []
+        self.share_observation_space = []
+
+        for i in range(self.n_agents):
+            self.action_space.append(Discrete(self.n_actions))
+            self.observation_space.append(self.get_obs_size())
+            self.share_observation_space.append(self.get_state_size())
+        
+
+        if self.use_stacked_frames:
+            self.stacked_local_obs = np.zeros(
+                (
+                    self.n_agents,
+                    self.stacked_frames,
+                    int(self.get_obs_size()[0] / self.stacked_frames)
+                ),
+                dtype=np.float32
+            )
+            self.stacked_global_state = np.zeros(
+                (
+                    self.n_agents,
+                    self.stacked_frames,
+                    int(self.get_state_size()[0] / self.stacked_frames)
+                ),
+                dtype=np.float32
+            )
+    
+
+
+    
