@@ -1357,4 +1357,20 @@ class StarCraft2Env(MultiAgentEnv):
         )
     
 
+    def get_surrounding_pathing(self, unit):
+        """
+        Returns pathing vals of the grid surrounding the given unit.
+        """
+        points = self.get_surrounding_points(
+            unit, include_self=False
+        )
+        vals = [
+            self.pathing_grid[x, y]
+            if self.check_bounds(x, y) else 1
+            for x, y in points
+        ]
+
+        return vals
+    
+
     
