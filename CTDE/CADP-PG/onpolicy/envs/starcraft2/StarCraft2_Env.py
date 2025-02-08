@@ -1290,4 +1290,30 @@ class StarCraft2Env(MultiAgentEnv):
             return 150  # Protoss's Colossus
     
 
+    def can_move(self, unit, direction):
+        """
+        Whether a unit can move in a given direction.
+        """
+        m = self._move_amount / 2
+
+        if direction == Direction.NORTH:
+            x, y = int(unit.pos.x), int(unit.pos.y + m)
+        
+        elif direction == Direction.SOUTH:
+            x, y = int(unit.pos.x), int(unit.pos.y - m)
+        
+        elif direction == Direction.EAST:
+            x, y = int(unit.pos.x + m), int(unit.pos.y)
+        
+        else:
+            x, y = int(unit.pos.x - m), int(unit.pos.y)
+        
+        if self.check_bounds(x, y) and self.pathing_grid[x, y]:
+            return True
+        
+
+        return False
+    
+
+
     
