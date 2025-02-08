@@ -2277,4 +2277,46 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_obs_size(self):
+        """
+        Returns the size of the observation.
+        """
+        own_feats = self.get_obs_own_feats_size()
+        move_feats = self.get_obs_move_feats_size()
+
+
+        n_enemies, n_enemy_feats = self.get_obs_enemy_feats_size()
+        n_allies, n_ally_feats = self.get_obs_ally_feats_size()
+
+
+        enemy_feats = n_enemies * n_enemy_feats
+        ally_feats = n_allies * n_ally_feats
+
+
+        all_feats = move_feats + enemy_feats + ally_feats + own_feats
+
+
+        agent_id_feats = 0
+        timestep_feats = 0
+
+
+        if self.obs_agent_id:
+            agent_id_feats = self.n_agents
+            all_feats += agent_id_feats
+        
+
+        if self.obs_timestep_number:
+            timestep_feats = 1
+            all_feats += timestep_feats
+        
+
+        return [
+            all_feats * self.stacked_frames
+            if self.use_stacked_frames
+            else all_feats, [n_allies, n_ally_feats], [n_enemies, n_enemy_feats], \
+                [1, move_feats], [1, own_feats + agent_id_feats + timestep_feats]
+        ]
+    
+
+
     
