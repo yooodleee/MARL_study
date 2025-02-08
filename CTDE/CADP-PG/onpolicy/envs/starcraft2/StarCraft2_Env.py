@@ -1316,4 +1316,35 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_surrounding_points(
+            self,
+            unit,
+            include_self=False):
+        
+        """
+        Returns the surrounding points of the unit in 8 directions.
+        """
+        x = int(unit.pos.x)
+        y = int(unit.pos.y)
+
+        ma = self._move_amount
+
+        points = [
+            (x, y + 2 * ma),
+            (x, y - 2 * ma),
+            (x + 2 * ma, y),
+            (x - 2 * ma, y),
+            (x + ma, y + ma),
+            (x - ma, y - ma),
+            (x + ma, y - ma),
+            (x - ma, y + ma),
+        ]
+
+        if include_self:
+            points.append((x, y))
+        
+
+        return points
+    
+
     
