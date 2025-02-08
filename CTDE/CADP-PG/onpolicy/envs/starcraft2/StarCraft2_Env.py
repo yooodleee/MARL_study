@@ -2504,4 +2504,48 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_unit_type_id(self, unit, ally):
+        """
+        Returns the ID of unit type in the given scenario.
+        """
+        if ally:    # use new SC2 unit types.
+            type_id = unit.unit_type - self._min_unit_type
+        
+        else:   # use default SC2 unit types
+            if self.map_type == "stalkers_and_zealots":
+                # id(Stalker) = 74, id(Zealot) = 73
+                type_id = unit.unit_type - 73
+            
+            elif self.map_type == "colossi_stalkers_zealots":
+                # id(Stalker) = 74, id(Zealot) = 73, id(Colossus) = 4
+                if unit.unit_type == 4:
+                    type_id = 0
+                
+                elif unit.unit_type == 74:
+                    type_id = 1
+                
+                else:
+                    type_id = 2
+            
+            elif self.map_type == "bane":
+                if unit.unit_type == 9:
+                    type_id = 0
+                
+                else:
+                    type_id = 1
+            
+            elif self.map_type == "MMM":
+                if unit.unit_type == 51:
+                    type_id = 0
+                
+                elif unit.unit_type == 48:
+                    type_id = 1
+                
+                else:
+                    type_id = 2
+            
+        return type_id
+    
+
+
     
