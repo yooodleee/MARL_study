@@ -2627,4 +2627,26 @@ class StarCraft2Env(MultiAgentEnv):
         return avail_actions
     
 
+    def close(self):
+        """
+        Close StarCraft II.
+        """
+        if self._sc2_proc:
+            self._sc2_proc.close()
+    
+
+    def seed(self, seed):
+        """
+        Returns the random seed used by the env.
+        """
+        self._seed = seed
+    
+
+    def render(self):
+        """
+        Not implemented.
+        """
+        pass
+
+
     
