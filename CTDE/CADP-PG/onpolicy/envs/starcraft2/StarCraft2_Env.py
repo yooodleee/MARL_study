@@ -1608,4 +1608,15 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_obs(self):
+        """
+        Returns all agent obs in a list.
+        NOTE: Agents should have access only to their local obs during
+            decentralized execution.
+        """
+        agent_obs = [self.get_obs_agent(i) for i in range(self.n_agents)]
+        
+        return agent_obs
+    
+
     
