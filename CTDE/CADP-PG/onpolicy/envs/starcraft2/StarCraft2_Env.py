@@ -2176,4 +2176,27 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_state_ally_feats_size(self):
+        """
+        Returns the dimensions of the matrix containing ally features.
+        Size is n_allies x n_features.
+        """
+        nf_al = 5 + self.unit_type_bits
+
+        if self.obs_all_health:
+            nf_al += 1 + self.shield_bits_ally
+        
+
+        if self.state_last_action:
+            nf_al += self.n_actions
+        
+
+        if self.add_center_xy:
+            nf_al += 2
+        
+
+        return self.n_agents - 1, nf_al
+    
+
+
     
