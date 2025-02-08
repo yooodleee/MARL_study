@@ -1373,4 +1373,20 @@ class StarCraft2Env(MultiAgentEnv):
         return vals
     
 
+    def get_surrounding_height(self, unit):
+        """
+        Returns height vals of the grid surrounding the given unit.
+        """
+        points = self.get_surrounding_points(
+            unit, include_self=True
+        )
+        vals = [
+            self.terrain_height[x, y]
+            if self.check_bounds(x, y) else 1
+            for x, y in points
+        ]
+
+        return vals
+    
+
     
