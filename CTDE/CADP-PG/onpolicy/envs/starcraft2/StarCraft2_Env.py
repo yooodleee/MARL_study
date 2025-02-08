@@ -566,4 +566,13 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def full_restart(self):
+        """
+        Full restart. Closes the SC2 process and launches a new one.
+        """
+        self._sc2_proc.close()
+        self._launch()
+        self.force_restarts += 1
+    
+
     
