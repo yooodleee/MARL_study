@@ -2865,5 +2865,27 @@ class StarCraft2Env(MultiAgentEnv):
 
         if ally:
             unit_alive = [
-                
+                a
+                for a in self.agents.values()
+                if (a.health > 0 and a.unit_type != self.medivac_id)
             ]
+
+            if len(unit_alive) == 0:
+                return True
+            
+            return False
+        
+        else:
+            unit_alive = [
+                a
+                for a in self.enemies.values()
+                if (a.health > 0 and a.unit_type != self.medivac_id)
+            ]
+
+            if len(unit_alive) == 1 and unit_alive[0].unit_type == 54:
+                return True
+            
+            return False
+    
+
+    
