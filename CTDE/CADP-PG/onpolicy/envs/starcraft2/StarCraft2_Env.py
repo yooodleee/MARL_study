@@ -2614,4 +2614,17 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_avail_actions(self):
+        """
+        Returns the available actions of all agents in a list.
+        """
+        avail_actions = []
+
+        for agent_id in range(self.n_agents):
+            avail_agent = self.get_avail_agent_actions(agent_id)
+            avail_actions.append(avail_agent)
+        
+        return avail_actions
+    
+
     
