@@ -2217,4 +2217,26 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_state_own_feats_size(self):
+        """
+        Returns the size of the vector containing the agent's own features.
+        """
+        own_feats = 4 + self.unit_type_bits
+
+        if self.obs_own_health:
+            own_feats += 1 + self.shield_bits_ally
+        
+
+        if self.state_last_action:
+            own_feats += self.n_actions
+        
+
+        if self.add_center_xy:
+            own_feats += 2
+        
+
+        return own_feats
+    
+
+
     
