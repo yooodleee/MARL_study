@@ -695,4 +695,137 @@ class StarCraft2Env(MultiAgentEnv):
                 dones, infos, available_actions
         
 
+        self._total_steps += 1
+        self._episode_steps += 1
+
+
+        # Update units
+        game_end_code = self.update_units()
+
+        reward = self.reward_battle()
+
+        available_actions = []
+        for i in range(self.n_agents):
+            available_actions.append(
+                self.get_avail_agent_actions(i)
+            )
         
+        if game_end_code is not None:
+
+            # Battle is over.
+            terminated = True
+            self.battles_game += 1
+
+            if game_end_code == 1 and not self.win_counted:
+                self.battles_won += 1
+                self.win_counted = True
+
+                if not self.reward_sparse:
+                    reward += self.reward_win
+                
+                else:
+                    reward = 1
+            
+            elif game_end_code == -1 and not self.defeat_counted:
+                self.defeat_counted = True
+                
+                if not self.reward_sparse:
+                    reward += self.reward_defeat
+                else:
+                    reward = -1
+        
+        
+        elif self._episode_steps >= self.episode_limit:
+
+            # Episode limit reaced
+            terminated = True
+            bad_transition = True
+
+            if self.continuing_episode:
+                infos['episode_limit'] = True
+            
+            self.battles_game += 1
+            self.timeouts += 1
+        
+        
+        for i in range(self.n_agents):
+            infos[i] = {
+                "battles_won": self.battles_won,
+                "battles_game": self.battles_game,
+                "battles_draw": self.timeouts,
+                "restarts": self.force_restarts,
+                "bad_transition": bad_transition,
+                "won": self.win_counted,
+            }
+
+            if terminated:
+                dones[i] = True
+            else:
+                if self.death_tracker_ally[i]:
+                    dones[i] = True
+                else:
+                    dones[i] = False
+        
+
+        if self.debug:
+            logging.debug(
+                "Reward= {}"
+                .format(reward).center(60, '-')
+            )
+        
+        
+        if terminated:
+            self._episode_count += 1
+        
+
+        if self.reward_scale:
+            reward /= self.max_reward / self.reward_scale_rate
+        
+
+        rewards = [[reward]] * self.n_agents
+
+
+        if self.use_state_agent:
+            global_state = [
+                self.get_state_agent(agent_id)
+                for agent_id in range(self.n_agents)
+            ]
+        else:
+            global_state = [
+                self.get_state(agent_id)
+                for agent_id in range(self.n_agents)
+            ]
+        
+        local_obs = self.get_obs()
+
+
+        if self.use_stacked_frames:
+            self.stacked_local_obs = np.roll(
+                self.stacked_local_obs, 1, axis=1
+            )
+            self.stacked_global_state = np.roll(
+                self.stacked_global_state, 1, axis=1
+            )
+
+            self.stacked_local_obs[:, -1, :] = np.array(
+                local_obs
+            ).copy()
+
+            self.stacked_global_state[:, -1, :] = np.array(
+                global_state
+            ).copy()
+
+            local_obs = self.stacked_local_obs.reshape(
+                self.n_agents, -1
+            )
+            global_state = self.stacked_global_state.reshape(
+                self.n_agents, -1
+            )
+
+
+        return local_obs, global_state, rewards, \
+            dones, infos, available_actions
+    
+
+
+    
