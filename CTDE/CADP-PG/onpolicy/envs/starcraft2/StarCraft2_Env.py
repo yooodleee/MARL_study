@@ -1082,4 +1082,61 @@ class StarCraft2Env(MultiAgentEnv):
             delta_y = target_unit.pos.y - unit.pos.y
 
 
+            if abs(delta_x) > abs(delta_y): # east or west
+                if delta_x > 0: # east
+                    
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x + self._move_amount,
+                        y=unit.pos.y
+                    )
+                    action_num = 4
+                
+                else:   # west
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x - self._move_amount,
+                        y=unit.pos.y
+                    )
+                    action_num = 5
+                
+            else:   # north or south
+
+                if delta_y > 0: # north
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x,
+                        y=unit.pos.y + self._move_amount
+                    )
+                    action_num = 2
+                
+                else:   # south
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x,
+                        y=unit.pos.y - self._move_amount
+                    )
             
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=actions['move'],
+                target_world_space_pos=target_pos,
+                unit_tags=[tag],
+                queue_command=False
+            )
+        else:
+
+            # Attack / heal the target
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=action_id,
+                target_unit_tag=target_tag,
+                unit_tags=[tag],
+                queue_command=False
+            )
+        
+        sc_action = sc_pb.Action(
+            action_raw=r_pb.ActionRaw(
+                unit_command=cmd
+            )
+        )
+
+        return sc_action, action_num
+    
+
+
+    
