@@ -2313,8 +2313,141 @@ class StarCraft2Env(MultiAgentEnv):
         return [
             all_feats * self.stacked_frames
             if self.use_stacked_frames
-            else all_feats, [n_allies, n_ally_feats], [n_enemies, n_enemy_feats], \
-                [1, move_feats], [1, own_feats + agent_id_feats + timestep_feats]
+            else all_feats, \
+                [n_allies, n_ally_feats], \
+                [n_enemies, n_enemy_feats], \
+                [1, move_feats], \
+                [1, own_feats + agent_id_feats + timestep_feats]
+        ]
+    
+
+
+    def get_state_size(self):
+        """
+        Returns the size of the global state.
+        """
+        if self.obs_instead_of_state:
+            return [
+                self.get_obs_size()[0]
+                * self.n_agents,
+                [self.n_agents, self.get_obs_size()[0]]
+            ]
+        
+        
+        if self.use_state_agent:
+            own_feats = self.get_state_own_feats_size()
+            move_feats = self.get_obs_move_feats_size()
+
+
+            n_enemies, n_enemy_feats = self.get_state_enemy_feats_size()
+            n_allies, n_ally_feats = self.get_state_ally_feats_size()
+
+
+            enemy_feats = n_enemies * n_enemy_feats
+            ally_feats = n_allies * n_ally_feats
+
+
+            all_feats = move_feats + enemy_feats + ally_feats + own_feats
+
+
+            agent_id_feats = 0
+            timestep_feats = 0
+
+
+            if self.state_agent_id:
+                agent_id_feats = self.n_agents
+                all_feats += agent_id_feats
+            
+
+            if self.state_timestep_number:
+                timestep_feats = 1
+                all_feats += timestep_feats
+            
+
+            return [
+                all_feats * self.stacked_frames
+                if self.use_stacked_frames
+                else all_feats, \
+                    [n_allies, n_ally_feats], \
+                    [n_enemies, n_enemy_feats], \
+                    [1, move_feats], \
+                    [1, own_feats + agent_id_feats + timestep_feats]
+            ]
+        
+
+        nf_al = 2 + self.shield_bits_ally + self.unit_type_bits
+        nf_en = 1 = self.shield_bits_enemy + self.unit_type_bits
+        nf_mv = self.get_state_move_feats_size()
+
+
+        if self.add_center_xy:
+            nf_al += 2
+            nf_en += 2
+        
+
+        if self.state_last_action:
+            nf_al += self.n_actions
+            nf_en += self.n_actions
+        
+
+        if self.add_visible_state:
+            nf_al += 1
+            nf_en += 1
+        
+
+        if self.add_distance_state:
+            nf_al += 1
+            nf_en += 1
+        
+
+        if self.add_xy_state:
+            nf_al += 2
+            nf_en += 2
+        
+
+        if self.add_enemy_action_state:
+            nf_en += 1
+        
+
+        enemy_state = self.n_enemies * nf_en
+        ally_state = self.n_agents * nf_al
+
+
+        size = enemy_state + ally_state
+
+
+        move_state = 0
+        obs_agent_size = 0
+        timestep_state = 0
+        agent_id_feats = 0
+
+
+        if self.add_move_state:
+            move_state = nf_mv
+            size += move_state
+
+
+        if self.add_local_obs:
+            obs_agent_size = self.get_obs_size()[0]
+            size += obs_agent_size
+        
+
+        if self.state_timestep_number:
+            timestep_state = 1
+            size += timestep_state
+        
+
+        if self.add_agent_id:
+            agent_id_feats = self.n_agents
+            size += agent_id_feats
+        
+
+        return [
+            size * self.stacked_frames
+            if self.use_stacked_frames
+            else size, \
+                [self.n_agents, nf_al],
+                [1, move_state + obs_agent_size + timestep_state + agent_id_feats]
         ]
     
 
