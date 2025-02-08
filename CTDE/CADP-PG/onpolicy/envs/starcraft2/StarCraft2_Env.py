@@ -2258,4 +2258,23 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_state_move_feats_size(self):
+        """
+        Returns the size of the vector containing the agent's movement
+            -related features.
+        """
+        move_feats = self.n_actions_move
+
+        if self.state_pathing_grid:
+            move_feats += self.n_obs_pathing
+        
+
+        if self.state_terrian_height:
+            move_feats += self.n_obs_height
+        
+
+        return move_feats
+    
+
+
     
