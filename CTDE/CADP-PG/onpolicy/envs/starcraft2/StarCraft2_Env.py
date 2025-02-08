@@ -575,4 +575,124 @@ class StarCraft2Env(MultiAgentEnv):
         self.force_restarts += 1
     
 
-    
+    def step(self, actions):
+        """
+        A single env step.
+        Returns reward, terminated, info.
+        """
+        terminated = False
+        bad_transition = False
+
+        infos = [{} for i in range(self.n_agents)]
+        dones = np.zeros(
+            (self.n_agents), dtype=bool
+        )
+
+        actions_int = [int(a) for a in actions]
+
+        self.last_action = np.eye(
+            self.n_actions
+        )[np.array(actions_int)]
+
+
+        # Collect individual actions.
+        sc_actions = []
+        if self.debug:
+            logging.debug("Actions".center(60, "-"))
+        
+        for a_id, action in enumerate(actions_int):
+            if not self.heuristic_ai:
+                sc_action = self.get_agent_action(a_id, action)
+            
+            else:
+                sc_action, action_num = self.get_agent_action_heuristic(
+                    a_id, action
+                )
+            
+            if sc_action:
+                sc_actions.append(sc_action)
+        
+
+        # Send action request
+        req_actions = sc_pb.RequestAction(actions=sc_actions)
+        try:
+            self._controller.actions(req_actions)
+
+            # Make step in SC2, i.e. apply actions.
+            self._controller.step(self._step_mul)
+
+            # Observe here if the episode is over.
+            self._obs = self._controller.observe()
+        
+        except (
+            protocol.ProtocolError,
+            protocol.ConnectionError
+        ):
+            self.full_restart()
+            terminated = True
+            available_actions = []
+
+            for i in range(self.n_agents):
+                available_actions.append(
+                    self.get_avail_agent_actions(i)
+                )
+
+                infos[i] = {
+                    "battles_won": self.battles_won,
+                    "battles_game": self.battles_game,
+                    "battles_draw": self.timeouts,
+                    "restarts": self.force_restarts,
+                    "bad_transition": bad_transition,
+                    "won": self.win_counted,
+                }
+
+                if terminated:
+                    dones[i] = True
+                else:
+                    if self.death_tracker_ally[i]:
+                        dones[i] = True
+                    else:
+                        dones[i] = False
+            
+            if self.use_state_agent:
+                global_state = [
+                    self.get_state_agent(agent_id)
+                    for agent_id in range(self.n_agents)
+                ]
+            else:
+                global_state = [
+                    self.get_state(agent_id)
+                    for agent_id in range(self.n_agents)
+                ]
+            
+            local_obs = self.get_obs()
+
+
+            if self.use_stacked_frames:
+                self.stacked_local_obs = np.roll(
+                    self.stacked_local_obs, 1, axis=1
+                )
+                self.stacked_global_state = np.roll(
+                    self.stacked_global_state, 1, axis=1
+                )
+
+                self.stacked_local_obs[:, -1, :] = np.array(
+                    local_obs
+                ).copy()
+                self.stacked_global_state[:, -1:, :] = np.array(
+                    global_state
+                ).copy()
+
+                local_obs = self.stacked_local_obs.reshape(
+                    self.n_agents, -1
+                )
+                global_state = self.stacked_global_state.reshape(
+                    self.n_agents, -1
+                )
+            
+
+            return local_obs, global_state, [[0]] * self.n_agents, \
+                dones, infos, available_actions
+        
+
+        
