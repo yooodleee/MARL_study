@@ -2649,4 +2649,21 @@ class StarCraft2Env(MultiAgentEnv):
         pass
 
 
+    def _kill_all_units(self):
+        """
+        Kill all units on the map.
+        """
+        units_alive = [
+            unit.tag for unit in self.agents.values() if unit.health > 0
+        ] + [
+            unit.tag for unit in self.enemies.values() if unit.health > 0
+        ]
+
+        debug_command = [
+            d_pb.DebugCommand(kill_unit=d_pb.DebugKillUnit(tag=units_alive))
+        ]
+        self._controller.debug(debug_command)
+    
+
+
     
