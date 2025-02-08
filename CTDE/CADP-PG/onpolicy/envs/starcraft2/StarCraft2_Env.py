@@ -1139,4 +1139,75 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def reward_battle(self):
+        """
+        Reward function when self.reward_sparse=False.
+        Returns accumulative hit/shield point damage dealt to the enemy
+            + reward_death_value per enemy unit killed, and, in case 
+            self.reward_only_positive == False, - (damage dealt to ally
+            units + reward_death_value per ally unit killed) * self.reward_
+            negative_scale.
+        """
+        if self.reward_sparse:
+            return 0
+        
+        reward = 0
+        delta_deaths = 0
+        delta_ally = 0
+        delta_enemy = 0
+
+        neg_scale = self.reward_negative_scale
+
+
+        # Update deaths
+        for al_id, al_unit in self.agents.items():
+            if not self.death_tracker_ally[al_id]:
+
+                # did not die so far
+                prev_health = (
+                    self.previous_ally_units[al_id].health
+                    + self.previous_ally_units[al_id].shield
+                )
+                if al_unit.health == 0:
+
+                    # just died.
+                    self.death_tracker_ally[al_id] = 1
+                    
+                    if not self.reward_only_positive:
+                        delta_deaths -= self.reward_death_value * neg_scale
+                    
+                    delta_ally += prev_health * neg_scale
+                
+                else:
+                    # still alive.
+                    delta_ally += neg_scale * (
+                        prev_health - al_unit.health - al_unit.shield
+                    )
+        
+        for e_id, e_unit in self.enemies.items():
+            if not self.death_tracker_enemy[e_id]:
+
+                prev_health = (
+                    self.previous_enemy_units[e_id].health
+                    + self.previous_enemy_units[e_id].shield
+                )
+                if e_unit.health == 0:
+                    self.death_tracker_enemy[e_id] = 1
+                    
+                    delta_deaths += self.reward_death_value
+                    delta_enemy += prev_health
+                else:
+                    delta_enemy += prev_health - e_unit.health - e_unit.shield
+        
+
+        if self.reward_only_positive:
+            reward = abs(delta_enemy + delta_deaths)    # shield regeneration.
+        else:
+            reward = delta_enemy + delta_deaths - delta_ally
+        
+
+        return reward
+    
+
+
     
