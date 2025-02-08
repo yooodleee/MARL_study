@@ -2024,4 +2024,103 @@ class StarCraft2Env(MultiAgentEnv):
                     
 
                     ind = 5
+                    if self.obs_all_health:
+                        ally_feats[i, ind] = (al_unit.health / al_unit.health_max) # health
+                        ind += 1
+
+                        if self.shield_bits_ally > 0:
+                            max_shield = self.unit_max_shield(al_unit)
+                            ally_feats[i, ind] = (al_unit.shield / max_shield) # shield
+                            ind += 1
                     
+
+                    if self.add_center_xy:
+                        ally_feats[i, ind] = (al_x - center_x) / self.max_distance_x # center X
+                        ally_feats[i, ind + 1] = (al_y - center_y) / self.max_distance_y # center Y
+                        ind += 2
+                    
+
+                    if self.unit_type_bits > 0:
+                        type_id = self.get_unit_type_id(al_unit, True)
+                        ally_feats[i, ind + type_id] = 1
+                        ind += self.unit_type_bits
+                    
+
+                    if self.state_last_action:
+                        ally_feats[i, ind:] = self.last_action[al_id]
+            
+
+            # Own features
+            ind = 0
+            own_feats[0] = 1 # visible
+            own_feats[1] = 0 # distance
+            own_feats[2] = 0 # X
+            own_feats[3] = 0 # Y
+            
+            
+            ind = 4
+            if self.obs_own_health:
+                own_feats[ind] = unit.health / unit.health_max
+                ind += 1
+
+                if self.shield_bits_ally > 0:
+                    max_shield = self.unit_max_shield(unit)
+                    own_feats[ind] = unit.shield / max_shield
+                    ind += 1
+            
+
+            if self.add_center_xy:
+                own_feats[ind] = (x - center_x) / self.max_distance_x # center X
+                own_feats[ind + 1] = (y - center_y) / self.max_distance_y # center Y
+                ind += 2
+            
+
+            if self.unit_type_bits > 0:
+                type_id = self.get_unit_type_id(unit, True)
+                own_feats[ind + type_id] = 1
+                ind += self.unit_type_bits
+            
+
+            if self.state_last_action:
+                own_feats[ind:] = self.last_action[agent_id]
+        
+
+        state = np.concatenate(
+            (
+                ally_feats.flatten(),
+                enemy_feats.flatten(),
+                move_feats.flatten(),
+                own_feats.flatten(),
+            )
+        )
+
+
+        # Agent id features
+        if self.state_agent_id:
+            agent_id_feats[agent_id] = 1.
+            state = np.append(state, agent_id_feats.flatten())
+        
+
+        if self.state_timestep_number:
+            state = np.append(
+                state,
+                self._episode_steps / self.episode_limit
+            )
+        
+
+        if self.debug:
+            logging.debug("Obs Agent: {}".format(agent_id).center(60, "-"))
+            logging.debug(
+                "Avail. actions {}".format(self.get_avail_agent_actions(agent_id))
+            )
+            logging.debug("Move feats {}".format(move_feats))
+            logging.debug("Enemy feats {}".format(enemy_feats))
+            logging.debug("Ally feats {}".format(ally_feats))
+            logging.debug("Own feats {}".format(own_feats))
+        
+
+        return state
+    
+
+
+    
