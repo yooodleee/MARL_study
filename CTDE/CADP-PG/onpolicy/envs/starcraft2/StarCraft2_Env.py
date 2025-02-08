@@ -2855,4 +2855,15 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
-    
+    def only_medivac_left(self, ally):
+        """
+        Check if only Medivac units are left.
+        """
+        if self.map_type != "MMM":
+            return False
+        
+
+        if ally:
+            unit_alive = [
+                
+            ]
