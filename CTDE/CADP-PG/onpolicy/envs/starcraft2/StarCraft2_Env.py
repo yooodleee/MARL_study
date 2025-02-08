@@ -2733,4 +2733,87 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def update_units(self):
+        """
+        Update units after an env step.
+        This function assumes that self._obs is up-to-date.
+        """
+        n_ally_alive = 0
+        n_enemy_alive = 0
+
+
+        # store previous state.
+        self.previous_ally_units = deepcopy(self.agents)
+        self.previous_enemy_units = deepcopy(self.enemies)
+
+
+        for al_id, al_unit in self.agents.items():
+            updated = False
+
+            for unit in self._obs.observation.raw_data.units:
+                if al_unit.tag == unit.tag:
+
+                    self.agents[al_id] = unit
+                    updated = True
+                    n_ally_alive += 1
+                    break
+            
+
+            if not updated: # dead
+                al_unit.health = 0
+        
+
+        for e_id, e_unit in self.enemies.items():
+            updated = False
+
+            for unit in self._obs.observation.raw_data.units:
+                if e_unit.tag == unit.tag:
+                    
+                    self.enemies[e_id] = unit
+                    updated = True
+                    n_enemy_alive += 1
+                    break
+            
+
+            if not updated: # dead
+                al_unit.health = 0
+        
+
+        for e_id, e_unit in self.enemies.items():
+            updated = False
+
+            for unit in self._obs.observation.raw_data.units:
+                if e_unit.tag == unit.tag:
+
+                    self.enemies[e_id] = unit
+                    updated = True
+                    n_enemy_alive += 1
+                    break
+            
+            if not updated: # dead
+                e_unit.health = 0
+        
+
+        if (
+            n_enemy_alive == 0
+            and n_enemy_alive > 0
+            or self.only_medivac_left(ally=True)
+        ):
+            return -1   # lost
+        
+        if (
+            n_ally_alive > 0
+            and n_enemy_alive == 0
+            or self.only_medivac_left(ally=False)
+        ):
+            return 1    # won
+        
+        if n_ally_alive == 0 and n_enemy_alive == 0:
+            return 0
+        
+
+        return None
+    
+
+
     
