@@ -205,4 +205,87 @@ class SMACRunner(Runner):
         return values, actions, action_log_probs, rnn_states, rnn_states_critic
     
 
+    def insert(self, data):
+        obs, share_obs, rewards, infos, dones, \
+        available_actions, values, actions, \
+        action_log_probs, rnn_states, rnn_states_critic = data
+
+
+        dones_env = np.all(dones, axis=1)
+
+
+        rnn_states[dones_env == True] = np.zeros(
+            (
+                (dones_env == True).sum(),
+                self.num_agents,
+                self.recurrent_N,
+                self.hidden_size,
+            ),
+            dtype=np.float32
+        )
+
+        rnn_states_critic[dones_env == True] = np.zeros(
+            (
+                (dones_env == True).sum(),
+                self.num_agents,
+                *self.buffer.rnn_states_critic.shape[3:],
+            ),
+            dtype=np.float32
+        )
+
+
+        masks = np.ones(
+            (self.n_rollout_threads, self.num_agents, 1),
+            dtype=np.float32
+        )
+        masks[dones_env == True] = np.zeros(
+            (
+                (dones_env == True).sum(),
+                self.num_agents,
+                1,
+            ),
+            dtype=np.float32
+        )
+
+
+        active_masks = np.ones(
+            (self.n_rollout_threads, self.num_agents, 1),
+            dtype=np.float32
+        )
+        active_masks[dones == True] = np.zeros(
+            (
+                (dones == True).sum(), 1
+            ),
+            dtype=np.float32
+        )
+        active_masks[dones_env == True] = np.ones(
+            (
+                (dones_env == True).sum(),
+                self.num_agents,
+                1,
+            ),
+            dtype=np.float32
+        )
+
+        
+        bad_masks = np.array(
+            [
+                [0.0] if info[agent_id]['bad_transition'] else [1.0]
+                for agent_id in range(self.num_agents)
+            ]
+            for info in infos
+        )
+
+
+        if not self.use_centralized_V:
+            share_obs = obs
+        
+
+        self.buffer.insert(
+            share_obs, obs, rnn_states, rnn_states_critic,
+            actions, action_log_probs, values, rewards, masks,
+            bad_masks, active_masks, available_actions
+        )
+    
+
     
