@@ -194,20 +194,25 @@ class Runner(object):
             policy_actor = self.trainer[agent_id].policy.actor
             torch.save(
                 policy_actor.state_dict(),
-                str(self.save_dir) + "/actor_agent" + str(agent_id) + ".pt"
+                str(self.save_dir) 
+                + "/actor_agent" 
+                + str(agent_id) 
+                + ".pt"
             )
 
             policy_critic = self.train[agent_id].policy.critic
             torch.save(
                 policy_critic.state_dict(),
-                str(self.save_dir) + "/critic_agent" + str(agent_id) + ".pt"
+                str(self.save_dir) + "/critic_agent" 
+                + str(agent_id) + ".pt"
             )
 
             if self.trainer[agent_id]._use_valuenorm:
                 policy_vnorm = self.trainer[agent_id].value_normalizer
                 torch.save(
                     policy_vnorm.state_dict(),
-                    str(self.save_dir) + "/vnorm_agent" + str(agent_id) + ".pt"
+                    str(self.save_dir) + "/vnorm_agent" 
+                    + str(agent_id) + ".pt"
                 )
     
 
@@ -215,18 +220,21 @@ class Runner(object):
 
         for agent_id in range(self.num_agents):
             policy_actor_state_dict = torch.load(
-                str(self.model_dir) + '/actor_agent' + str(agent_id) + '.pt'
+                str(self.model_dir) + '/actor_agent' 
+                + str(agent_id) + '.pt'
             )
             self.policy[agent_id].actor.load_state_dict(policy_actor_state_dict)
 
             policy_critic_state_dict = torch.load(
-                str(self.model_dir) + '/critic_agent' + str(agent_id) + '.pt'
+                str(self.model_dir) + '/critic_agent' 
+                + str(agent_id) + '.pt'
             )
             self.policy[agent_id].critic.load_state_dict(policy_critic_state_dict)
 
             if self.trainer[agent_id]._use_valuenorm:
                 policy_vnorm_state_dict = torch.load(
-                    str(self.model_dir) + '/vnorm_agent' + str(agent_id) + '.pt'
+                    str(self.model_dir) + '/vnorm_agent' 
+                    + str(agent_id) + '.pt'
                 )
                 self.trainer[agent_id].value_normalizer.load_state_dict(policy_vnorm_state_dict)
     
@@ -251,4 +259,19 @@ class Runner(object):
                     )
     
 
-    
+    def log_env(
+            self,
+            env_infos,
+            total_num_steps):
+        
+        for k, v in env_infos.items():
+            if len(v) > 0:
+
+                if self.use_wandb:
+                    wandb.log(
+                        {k: np.mean(v)}, step=total_num_steps
+                    )
+                else:
+                    self.writter.add_scalars(
+                        k, {k: np.mean(v)}, total_num_steps
+                    )
