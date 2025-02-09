@@ -235,4 +235,17 @@ class SeparatedReplayBuffer(object):
         self.step = (self.step + 1) % self.episode_length
     
 
+    def after_update(self):
+        self.share_obs[0] = self.share_obs[-1].copy()
+        self.obs[0] = self.obs[-1].copy()
+        self.rnn_states[0] = self.rnn_states[-1].copy()
+        self.rnn_states_critic[0] = self.rnn_states_critic[-1].copy()
+        self.masks[0] = self.masks[-1].copy()
+        self.bad_masks[0] = self.bad_masks[-1].copy()
+        self.active_masks[0] = self.active_masks[-1].copy()
+
+        if self.available_actions is not None:
+            self.available_actions[0] = self.available_actions[-1].copy()
+    
+
     
