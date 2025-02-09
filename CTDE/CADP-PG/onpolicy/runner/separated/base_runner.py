@@ -137,4 +137,20 @@ class Runner(object):
     
 
 
+    def run(self):
+        raise NotImplementedError
+    
+
+    def warmup(self):
+        raise NotImplementedError
+    
+
+    def collect(self, step):
+        raise NotImplementedError
+    
+
+    def insert(self, data):
+        raise NotImplementedError
+    
+
     
