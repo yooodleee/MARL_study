@@ -419,4 +419,102 @@ class SeparatedReplayBuffer(object):
                 old_action_log_probs_batch, adv_targ, available_actions_batch
     
 
+    def naive_recurrent_generator(
+            self,
+            advantages,
+            num_mini_batch):
+        
+        n_rollout_threads = self.rewards.shape[1]
+
+        assert n_rollout_threads <= num_mini_batch, (
+            "PPO requires the number of processes ({}) "
+            "to be greater than or equal to the number of "
+            "PPO mini batches ({}).".format(
+                n_rollout_threads, num_mini_batch
+            )
+        )
+        num_envs_per_batch = n_rollout_threads // num_mini_batch
+        perm = torch.randperm(n_rollout_threads).numpy()
+
+        for start_ind in range(0, n_rollout_threads, num_envs_per_batch):
+            share_obs_batch = []
+            obs_batch = []
+            rnn_states_batch = []
+            rnn_states_critic_batch = []
+            actions_batch = []
+            available_actions_batch = []
+            value_preds_batch = []
+            return_batch = []
+            masks_batch = []
+            active_masks_batch = []
+            old_action_log_probs_batch = []
+            adv_targ = []
+
+            for offset in range(num_envs_per_batch):
+                ind = perm[start_ind + offset]
+
+                share_obs_batch.append(self.share_obs[:-1, ind])
+                obs_batch.append(self.obs[:-1, ind])
+                rnn_states_batch.append(self.rnn_states[0:1, ind])
+                rnn_states_critic_batch.append(self.rnn_states_critic[0:1, ind])
+                actions_batch.append(self.actions[:, ind])
+
+                if self.available_actions is not None:
+                    available_actions_batch.append(self.available_actions[:-1, ind])
+                
+                value_preds_batch.append(self.value_preds[:-1, ind])
+                return_batch.append(self.returns[:-1, ind])
+                masks_batch.append(self.masks[:-1, ind])
+                active_masks_batch.append(self.active_masks[:-1, ind])
+                old_action_log_probs_batch.append(self.action_log_probs[:, ind])
+                adv_targ.append(advantages[:, ind])
+            
+
+            # [N[T, dim]]
+            T, N = self.episode_length, num_envs_per_batch
+            # These are all from_numpys of size (T, N, -1)
+            share_obs_batch = np.stack(share_obs_batch, 1)
+            obs_batch = np.stack(obs_batch, 1)
+            actions_batch = np.stack(actions_batch, 1)
+
+            if self.available_actions is not None:
+                available_actions_batch = np.stack(available_actions_batch, 1)
+            
+            value_preds_batch = np.stack(value_preds_batch, 1)
+            return_batch = np.stack(return_batch, 1)
+            masks_batch = np.stack(masks_batch, 1)
+            active_masks_batch = np.stack(active_masks_batch)
+            old_action_log_probs_batch = np.stack(old_action_log_probs_batch, 1)
+            adv_targ = np.stack(adv_targ, 1)
+
+
+            # States is just a (N, -1) from numpy [N[1, dim]]
+            rnn_states_batch = np.stack(rnn_states_batch, 1).reshape(N, *self.rnn_states.shape[2:])
+            rnn_states_critic_batch = np.stack(rnn_states_critic_batch, 1).reshape(N, *self.rnn_states_critic.shape[2:])
+
+
+            # Flatten the (T, N, ...) from_numpy to (T * N, ...)
+            share_obs_batch = _flatten(T, N, share_obs_batch)
+            obs_batch = _flatten(T, N, obs_batch)
+            actions_batch = _flatten(T, N, actions_batch)
+
+            if self.available_actions is not None:
+                available_actions_batch = _flatten(T, N, available_actions_batch)
+            
+            else:
+                available_actions_batch = None
+            
+            value_preds_batch = _flatten(T, N, value_preds_batch)
+            return_batch = _flatten(T, N, return_batch)
+            masks_batch = _flatten(T, N, masks_batch)
+            active_masks_batch = _flatten(T, N, active_masks_batch)
+            old_action_log_probs_batch = _flatten(T, N, old_action_log_probs_batch)
+            adv_targ = _flatten(T, N, adv_targ)
+
+
+            yield share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, \
+                actions_batch, value_preds_batch, return_batch, masks_batch, active_masks_batch, \
+                old_action_log_probs_batch, adv_targ, available_actions_batch
+    
+
     
