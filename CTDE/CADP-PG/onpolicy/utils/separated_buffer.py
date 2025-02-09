@@ -160,4 +160,42 @@ class SeparatedReplayBuffer(object):
         self.step = 0
     
 
+    def insert(
+            self,
+            share_obs,
+            obs,
+            rnn_states,
+            rnn_states_critic,
+            actions,
+            action_log_probs,
+            value_preds,
+            rewards,
+            masks,
+            bad_masks=None,
+            active_masks=None,
+            available_actions=None):
+        
+        self.share_obs[self.step + 1] = share_obs.copy()
+        self.obs[self.step + 1] = obs.copy()
+        self.rnn_states[self.step + 1] = rnn_states.copy()
+        self.rnn_states_critic[self.step + 1] = rnn_states_critic.copy()
+        self.actions[self.step] = actions.copy()
+        self.action_log_probs[self.step] = action_log_probs.copy()
+        self.value_preds[self.step] = value_preds.copy()
+        self.rewards[self.step] = rewards.copy()
+        self.masks[self.step + 1] = masks.copy()
+
+
+        if bad_masks is not None:
+            self.bad_masks[self.step + 1] = bad_masks.copy()
+        
+        if active_masks is not None:
+            self.active_masks[self.step + 1] = active_masks.copy()
+        
+        if available_actions is not None:
+            self.available_actions[self.step + 1] = available_actions.copy()
+        
+        self.step = (self.step + 1) % self.episode_length
+    
+
     
