@@ -231,4 +231,24 @@ class Runner(object):
                 self.trainer[agent_id].value_normalizer.load_state_dict(policy_vnorm_state_dict)
     
 
+    def log_train(
+            self, 
+            train_infos, 
+            total_num_steps):
+
+        for agent_id in range(self.num_agents):
+            for k, v in train_infos[agent_id].items():
+
+                agent_k = "agent%i" % agent_id + k
+
+                if self.use_wandb:
+                    wandb.log(
+                        {agent_k: v}, step=total_num_steps
+                    )
+                else:
+                    self.writter.add_scalars(
+                        agent_k, {agent_k: v}, total_num_steps
+                    )
+    
+
     
