@@ -288,4 +288,23 @@ class SMACRunner(Runner):
         )
     
 
+    def log_train(
+            self, 
+            train_infos, 
+            total_num_steps):
+        
+        train_infos["average_step_rewards"] = np.mean(self.buffer.rewards)
+
+        for k, v in train_infos.items():
+            if self.use_wandb:
+                wandb.log(
+                    {k: v}, step=total_num_steps
+                )
+            
+            else:
+                self.writter.add_scalars(
+                    k, {k: v}, total_num_steps
+                )
+    
+
     
