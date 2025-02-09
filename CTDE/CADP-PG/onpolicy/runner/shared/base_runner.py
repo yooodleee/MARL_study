@@ -277,4 +277,31 @@ class Runner(object):
                 self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
     
 
+    def log_train(
+            self,
+            train_infos,
+            total_num_steps):
+        
+        """
+        Log training info.
+
+        Params
+        --------------
+            train_infos: (dict)
+                info about training update.
+            total_num_steps: (int)
+                total num of training env steps.
+        """        
+        for k, v in train_infos.items():
+            if self.use_wandb:
+                wandb.log(
+                    {k: v}, step=total_num_steps
+                )
+            
+            else:
+                self.writter.add_scalars(
+                    k, {k: v}, total_num_steps
+                )
+    
+
     
