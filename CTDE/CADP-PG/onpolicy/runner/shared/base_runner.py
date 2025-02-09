@@ -203,4 +203,31 @@ class Runner(object):
             )
     
 
+    def save_timestep(self, timestep):
+        """
+        Save policy's actor and critic networks.
+        """
+        policy_actor = self.trainer.policy.actor
+        torch.save(
+            policy_actor.state_dict(),
+            str(self.save_dir) + "/actor"
+            + str(timestep) + ".pt"
+        )
+
+        policy_critic = self.trainer.policy.critic
+        torch.save(
+            policy_critic.state_dict(),
+            str(self.save_dir) + "/critic"
+            + str(timestep) + ".pt"
+        )
+
+        if self.trainer._use_valuenorm:
+            policy_vnorm = self.trainer.value_normalizer
+            torch.save(
+                policy_vnorm.state_dict(),
+                str(self.save_dir) + "/vnorm"
+                + str(timestep) + ".pt"
+            )
+    
+
     
