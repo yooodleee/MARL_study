@@ -127,4 +127,37 @@ class Runner(object):
         )
     
 
+    def run(self):
+        """
+        Collect training data, perform training updates, and eval policy.
+        """
+        raise NotImplementedError
+    
+
+    def warmup(self):
+        """
+        Collect warmup pre-training data.
+        """
+        raise NotImplementedError
+    
+
+    def collect(self, step):
+        """
+        Collect rollouts for training.
+        """
+        raise NotImplementedError
+    
+
+    def insert(self, data):
+        """
+        Insert data into buffer.
+
+        Param
+        ------------
+            data: (Tuple)
+                data to insert training buffer.
+        """
+        raise NotImplementedError
+    
+
     
