@@ -252,4 +252,29 @@ class Runner(object):
                 self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
     
 
+    def restore_timestep(self, timestep):
+        """
+        Restore policy's network from a saved model.
+        """
+        policy_actor_state_dict = torch.load(
+            str(self.model_dir) + '/actor'
+            + str(timestep) + '.pt'
+        )
+        self.policy.actor.load_state_dict(policy_actor_state_dict)
+
+        if not self.all_args.use_render:
+            policy_critic_state_dict = torch.load(
+                str(self.model_dir) + '/critic'
+                + str(timestep) + '.pt'
+            )
+            self.policy.critic.load_state_dict(policy_critic_state_dict)
+
+            if self.trainer._use_valuenorm:
+                policy_vnorm_state_dict = torch.load(
+                    str(self.model_dir) + '/vnorm' 
+                    + str(timestep) + '.pt'
+                )
+                self.trainer.value_normalizer.load_state_dict(policy_vnorm_state_dict)
+    
+
     
