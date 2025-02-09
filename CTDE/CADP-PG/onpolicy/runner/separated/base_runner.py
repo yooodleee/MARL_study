@@ -172,4 +172,19 @@ class Runner(object):
             )
 
     
+    def train(self):
+        train_infos = []
+
+        for agent_id in range(self.num_agents):
+            self.trainer[agent_id].prep_training()
+
+            train_info = self.trainer[agent_id].train(self.buffer[agent_id])
+            train_infos.append(train_info)
+            
+            self.buffer[agent_id].after_update()
+
+
+            return train_infos
+    
+
     
