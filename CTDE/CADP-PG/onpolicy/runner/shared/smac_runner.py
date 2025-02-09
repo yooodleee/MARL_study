@@ -163,4 +163,20 @@ class SMACRunner(Runner):
                     self.eval(total_num_steps)
     
 
+    def warmup(self):
+        
+        # reset env.
+        obs, share_obs, available_actions = self.envs.reset()
+
+
+        # replay buffer.
+        if not self.use_centralized_V:
+            share_obs = obs
+        
+
+        self.buffer.share_obs[0] = share_obs.copy()
+        self.buffer.obs[0] = obs.copy()
+        self.buffer.available_actions[0] = available_actions.copy()
+    
+
     
