@@ -14,3 +14,14 @@ def _t2n(x):
 
 
 
+class SMACRunner(Runner):
+    """
+    Runner class to perform training, eval. and data collection for SMAC.
+    See parent class for details.
+    """
+
+    def __init__(self, config):
+        super(SMACRunner, self).__init__(config)
+    
+
+    
