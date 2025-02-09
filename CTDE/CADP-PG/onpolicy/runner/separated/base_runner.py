@@ -187,4 +187,28 @@ class Runner(object):
             return train_infos
     
 
+    def save(self):
+        
+        for agent_id in range(self.num_agents):
+
+            policy_actor = self.trainer[agent_id].policy.actor
+            torch.save(
+                policy_actor.state_dict(),
+                str(self.save_dir) + "/actor_agent" + str(agent_id) + ".pt"
+            )
+
+            policy_critic = self.train[agent_id].policy.critic
+            torch.save(
+                policy_critic.state_dict(),
+                str(self.save_dir) + "/critic_agent" + str(agent_id) + ".pt"
+            )
+
+            if self.trainer[agent_id]._use_valuenorm:
+                policy_vnorm = self.trainer[agent_id].value_normalizer
+                torch.save(
+                    policy_vnorm.state_dict(),
+                    str(self.save_dir) + "/vnorm_agent" + str(agent_id) + ".pt"
+                )
+    
+
     
