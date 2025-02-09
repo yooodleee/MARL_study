@@ -304,4 +304,30 @@ class Runner(object):
                 )
     
 
-    
+    def log_env(
+            self,
+            env_infos,
+            total_num_steps):
+        
+        """
+        Log env info.
+
+        Params
+        -------------
+            env_infos: (dict)
+                info about env state.
+            total_num_steps: (int)
+                total num of training env steps.
+        """
+        for k, v in env_infos.items():
+            
+            if len(v) > 0:
+                if self.use_wandb:
+                    wandb.log(
+                        {k: np.mean(v)}, step=total_num_steps
+                    )
+                
+                else:
+                    self.writter.add_scalars(
+                        k, {k: np.mean(v)}, total_num_steps
+                    )
