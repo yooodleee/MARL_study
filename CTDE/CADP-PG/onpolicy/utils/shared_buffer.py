@@ -174,4 +174,72 @@ class SharedReplayBuffer(object):
     
 
 
+    def insert(
+            self,
+            share_obs,
+            obs,
+            rnn_states_actor,
+            rnn_states_critic,
+            actions,
+            action_log_probs,
+            value_preds,
+            rewards,
+            masks,
+            bad_masks=None,
+            active_masks=None,
+            available_actions=None):
+        
+        """
+        Insert data into the buffer.
+
+        Params
+        ----------------
+            share_obs: (argparse.Namespace)
+                args containing relevent model, policy, and env info.
+            obs: (np.ndarray)
+                local agent obs.
+            rnn_states_actor: (np.ndarray)
+                RNN states for actor network.
+            rnn_states_critic: (np.ndarray)
+                RNN states for critic network.
+            actions: (np.ndarray)
+                acts taken by agents.
+            action_log_probs: (np.ndarray)
+                log probs of acts taken by agents.
+            value_preds: (np.ndarray)
+                value func pred at each step.
+            rewards: (np.ndarray)
+                reward collected at each step.
+            masks: (np.ndarray)
+                denotes whether the env has terminated or not.
+            bad_masks: (np.ndarray)
+                act space for agents.
+            active_masks: (np.ndarray)
+                denotes whether an agent is active or dead in the env.
+            available_actions: (np.ndarray)
+                acts available to each agent. If None, all acts are available.
+        """
+        self.share_obs[self.step + 1] = share_obs.copy()
+        self.obs[self.step + 1] = obs.copy()
+        self.rnn_states[self.step + 1] = rnn_states_actor.copy()
+        self.rnn_states_critic[self.step + 1] = rnn_states_critic.copy()
+        self.actions[self.step] = actions.copy()
+        self.action_log_probs[self.step] = action_log_probs.copy()
+        self.value_preds[self.step] = value_preds.copy()
+        self.rewards[self.step] = rewards.copy()
+        self.masks[self.step + 1] = masks.copy()
+
+        if bad_masks is not None:
+            self.bad_masks[self.step + 1] = bad_masks.copy()
+        
+        if active_masks is not None:
+            self.active_masks[self.step + 1] = active_masks.copy()
+        
+        if available_actions is not None:
+            self.available_actions[self.step + 1] = available_actions.copy()
+        
+
+        self.step = (self.step + 1) % self.episode_length
+    
+
     
