@@ -449,4 +449,104 @@ class SharedReplayBuffer(object):
                                     + self.rewards[step]
     
 
+    def feed_forward_generator(
+            self,
+            advantages,
+            num_mini_batch=None,
+            mini_batch_size=None):
+        
+        """
+        Yield training data for MLP policies.
+
+        Params
+        ---------------
+            advantages: (np.ndarray)
+                advantages estimates.
+            num_mini_batch: (int)
+                num of mini batches to split the batch into.
+            mini_batch_size: (int)
+                num of samples in each mini batch.
+        """
+        episode_length, n_rollout_threads, num_agents = self.rewards.shape[0:3]
+        batch_size = n_rollout_threads * episode_length * num_agents
+
+        if mini_batch_size is None:
+            assert batch_size >= num_mini_batch, (
+                "PPO requires the number of processes ({}) "
+                "* number of steps ({}) * number of agents ({}) = {} "
+                "to be greater than or equal to the number of PPO mini batches ({})."
+                "".format(
+                    n_rollout_threads,
+                    episode_length,
+                    num_agents,
+                    n_rollout_threads * episode_length * num_agents,
+                    num_mini_batch,
+                )
+            )
+
+            mini_batch_size = batch_size // num_mini_batch
+        
+        rand = torch.randperm(batch_size).numpy()
+        sampler = [
+            rand[i * mini_batch_size:(i + 1) * mini_batch_size]
+            for i in range(num_mini_batch)
+        ]
+
+        share_obs = self.share_obs[:-1].reshape(-1, *self.share_obs.shape[3:])
+        obs = self.obs[:-1].reshape(-1, *self.obs.shape[3:])
+        rnn_states = self.rnn_states[:-1].reshape(-1, *self.rnn_states[3:])
+        rnn_states_critic = self.rnn_states_critic[:-1].reshape(-1, *self.rnn_states_critic[3:])
+        actions = self.actions.reshape(-1, self.actions.shape[-1])
+
+        if self.available_actions is not None:
+            available_actions = self.available_actions[:-1].reshape(-1, self.available_actions.shape[-1])
+        
+        value_preds = self.value_preds[:-1].reshape(-1, 1)
+        returns = self.returns[:-1].reshape(-1, 1)
+        masks = self.masks[:-1].reshape(-1, 1)
+        active_masks = self.active_masks[:-1].reshape(-1, 1)
+        action_log_probs = self.action_log_probs.reshape(-1, self.action_log_probs.shape[-1])
+        advantages = advantages.reshape(-1, 1)
+
+
+        for indices in sampler:
+            # obs size [T + 1 N M Dim] --> [T N M Dim] --> [T * N * M, Dim] --> [index, Dim]
+            share_obs_batch = share_obs[indices]
+            obs_batch = obs[indices]
+            rnn_states_batch = rnn_states[indices]
+            rnn_states_critic_batch = rnn_states_critic[indices]
+            actions_batch = actions[indices]
+
+            if self.available_actions is not None:
+                available_actions_batch = available_actions[indices]
+            
+            else:
+                available_actions_batch = None
+            
+            value_preds_batch = value_preds[indices]
+            return_batch = returns[indices]
+            masks_batch = masks[indices]
+            active_masks_batch = active_masks[indices]
+            old_action_log_probs_batch = action_log_probs[indices]
+
+            if advantages is None:
+                adv_targ = None
+            else:
+                adv_targ = advantages[indices]
+            
+
+            yield share_obs_batch, \
+                obs_batch, \
+                rnn_states_batch, \
+                rnn_states_critic_batch, \
+                actions_batch, \
+                value_preds_batch, \
+                return_batch, \
+                masks_batch, \
+                active_masks_batch, \
+                old_action_log_probs_batch, \
+                adv_targ, \
+                available_actions_batch
+    
+
     
