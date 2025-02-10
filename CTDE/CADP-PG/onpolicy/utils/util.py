@@ -13,3 +13,10 @@ def get_params_size(params_list):
     return "{:.0f}K".format(params_size)
 
 
+
+def check(input):
+    if type(input) == np.ndarray:
+        return torch.from_numpy(input)
+
+
+
