@@ -798,4 +798,39 @@ class SharedReplayBuffer(object):
             adv_targ = np.stack(adv_targ, axis=1)
 
 
+            # States is just a (N, -1) from_numpy
+            rnn_states_batch = np.stack(rnn_states_batch).reshape(N, *self.rnn_states.shape[3:])
+            rnn_states_critic_batch = np.stack(rnn_states_critic_batch).reshape(N, *self.rnn_states_critic.shape[3:])
+
+
+            # Flatten the (L, N, ...) from_numpys to (L, *N, ...)
+            share_obs_batch = _flatten(L, N, share_obs_batch)
+            obs_batch = _flatten(L, N, obs_batch)
+            actions_batch = _flatten(L, N, actions_batch)
+
+            if self.available_actions is not None:
+                available_actions_batch = _flatten(L, N, available_actions_batch)
             
+            else:
+                available_actions_batch = None
+            
+            value_preds_batch = _flatten(L, N, value_preds_batch)
+            return_batch = _flatten(L, N, return_batch)
+            masks_batch = _flatten(L, N, masks_batch)
+            active_masks_batch = _flatten(L, N, active_masks_batch)
+            old_action_log_probs_batch = _flatten(L, N, old_action_log_probs_batch)
+            adv_targ = _flatten(L, N, adv_targ)
+
+
+            yield share_obs_batch, \
+                obs_batch, \
+                rnn_states_batch, \
+                rnn_states_critic_batch, \
+                actions_batch, \
+                value_preds_batch, \
+                return_batch, \
+                masks_batch, \
+                active_masks_batch, \
+                old_action_log_probs_batch, \
+                adv_targ, \
+                available_actions_batch
