@@ -328,4 +328,14 @@ class SharedReplayBuffer(object):
             self.available_actions[0] = self.available_actions[-1].copy()
     
 
+    def chooseafter_update(self):
+        """
+        Copy last timestep data to first index. This method is used for Hanabi.
+        """
+        self.rnn_states[0] = self.rnn_states[-1].copy()
+        self.rnn_states_critic[0] = self.rnn_states_critic[-1].copy()
+        self.masks[0] = self.masks[-1].copy()
+        self.bad_masks[0] = self.bad_masks[-1].copy()
+    
+
     
