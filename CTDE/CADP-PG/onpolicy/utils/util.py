@@ -55,3 +55,21 @@ def huber_loss(e, d):
     return a * e ** 2/2 + b * d * (abs(e) - d/2)
 
 
+def mse_loss(e):
+    
+    return e ** 2/2
+
+
+def get_shape_from_obs_space(obs_space):
+    if obs_space.__class__.__name__ == 'Box':
+        obs_space = obs_space.shape
+    
+    elif obs_space.__class__.__name__ == 'list':
+        obs_space = obs_space
+    
+    else:
+        raise NotImplementedError
+    
+    return obs_space
+
+
