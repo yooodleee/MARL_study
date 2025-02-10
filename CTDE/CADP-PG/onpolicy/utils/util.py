@@ -20,3 +20,15 @@ def check(input):
 
 
 
+def get_grad_norm(it):
+    sum_grad = 0
+    for x in it:
+        if x.grad is None:
+            continue
+
+        sum_grad += x.grad.norm() ** 2
+    
+    return math.sqrt(sum_grad)
+
+
+
