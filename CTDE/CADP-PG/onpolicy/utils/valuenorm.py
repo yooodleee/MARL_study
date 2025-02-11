@@ -39,4 +39,12 @@ class ValueNorm(nn.Module):
         self.debiasing_term.zero_()
     
 
+    def running_mean_var(self):
+        debiased_mean = self.running_mean / self.debiasing_term.clamp(min=self.epsilon)
+        debiased_mean_sq = self.running_mean_sq / self.debiasing_term.clamp(min=self.epsilon)
+        debiased_var = (debiased_mean_sq - debiased_mean ** 2).clamp(min=1e-2)
+
+        return debiased_mean, debiased_var
+    
+
     
