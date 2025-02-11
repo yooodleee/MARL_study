@@ -171,4 +171,71 @@ class EpisodeBatch:
                 idx -= 1
     
 
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            if item in self.data.episode_data:
+                return self.data.episode_data[item]
+
+            elif item in self.data.transition_data:
+                return self.data.transition_data[item]
+            
+            else:
+                raise ValueError
+        
+        elif isinstance(item, tuple) and all([isinstance(it, str) for it in item]):
+            new_data = self._new_data_sn()
+
+            for key in item:
+                if key in self.data.transition_data:
+                    new_data.transition_data[key] = self.data.transition_data[key]
+                
+                elif key in self.data.episode_data:
+                    new_data.episode_data[key] = self.data.episode_data[key]
+                
+                else:
+                    raise KeyError("Unrecongnised key {}".format(key))
+            
+
+            # Update the scheme to only have the requested keys
+            new_scheme = {key: self.scheme[key] for key in item}
+            new_groups = {
+                self.scheme[key]["group"]: self.groups[self.scheme[key]["group"]]
+                for key in item if "group" in self.scheme[key]
+            }
+            ret = EpisodeBatch(
+                new_scheme, 
+                new_groups, 
+                self.batch_size, 
+                self.max_seq_length, 
+                data=new_data, 
+                device=self.device
+            )
+
+            return ret
+        
+        else:
+            item = self._parse_slices(item)
+            new_data = self._new_data_sn()
+
+            for k, v in self.data.transition_data.items():
+                new_data.transition_data[k] = v[item]
+            
+            for k, v in self.data.episode_data.items():
+                new_data.episode_data[k] = v[item[0]]
+            
+            ret_bs = self._get_num_items(item[0], self.batch_size)
+            ret_max_t = self._get_num_items(item[1], self.max_seq_length)
+
+            ret = EpisodeBatch(
+                self.scheme,
+                self.groups,
+                ret_bs,
+                ret_max_t,
+                data=new_data,
+                device=self.device
+            )
+
+            return ret
+        
+    
     
