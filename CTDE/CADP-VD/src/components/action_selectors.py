@@ -42,3 +42,12 @@ REGISTRY["multinomial"] = MultinomialActionSelector
 
 
 
+class EpsilonGreedyActionSelector():
+
+    def __init__(self, args):
+        self.args = args
+        self.schedule = DecayThenFlatSchedule(args.epsilon_start, args.epsilon_finish, decay="linear")
+        self.epsilon = self.schedule.eval(0)
+    
+
+    
