@@ -32,3 +32,17 @@ ex.capture_out_filter = apply_backspaces_and_lifefeeds
 results_path = os.path.join(dirname(dirname(abspath(__file__))), "results")
 
 
+@ex.main
+def my_main(_run, _config, _log):
+
+    # Setting the random seed throughout the modules
+    config = config_copy(_config)
+    np.random.seed(config["seed"])
+    torch.manual_seed(config["seed"])
+    config['env_args']['seed'] = config["seed"]
+
+    # run the framework
+    run(_run, _config, _log)
+
+
+
