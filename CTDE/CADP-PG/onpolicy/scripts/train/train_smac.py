@@ -218,7 +218,7 @@ def main(args):
         from onpolicy.runner.shared.smac_runner import SMACRunner as Runner
     
     else:
-        from onpolicy.runner.separated.smac_runner import SMACRunner as Runner
+        from onpolicy.runner.shared.smac_runner import SMACRunner as Runner
     
     runner = Runner(config)
     runner.run()
