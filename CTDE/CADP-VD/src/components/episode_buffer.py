@@ -260,4 +260,33 @@ class EpisodeBatch:
         return new_data
     
 
+    def _parse_slices(self, items):
+        parsed = []
+
+        # Only batch slice given, and full time slice.
+        if (
+            isinstance(items, slice)    # slice a:b
+            or isinstance(items, int)   # int i
+            or isinstance(items, (list, np.ndarray, torch.LongTensor, torch.cuda.LongStorage))  # [a,b,c]
+        ):
+            items = (items, slice(None))
+        
+
+        # Need the time indexing to be contiguous
+        if isinstance(items[1], list):
+            raise IndexError("Indexing across Time must be contiguous")
+        
+        for item in items:
+            # TODO: stronger checks to ensure only supported options get through
+            if isinstance(item, int):
+                # Convert single indices to slices
+                parsed.append(slice(item, item + 1))
+            
+            else:
+                # Leave slices and lists as is
+                parsed.append(item)
+        
+        return parsed
+    
+
     
