@@ -238,4 +238,18 @@ class EpisodeBatch:
             return ret
         
     
+    def _get_num_items(
+            self,
+            indexing_item,
+            max_size):
+        
+        if isinstance(indexing_item, list) or isinstance(indexing_item, np.ndarray):
+            return len(indexing_item)
+        
+        elif isinstance(indexing_item, slice):
+            _range = indexing_item.indices(max_size)
+
+            return 1 + (_range[1] - _range[0] - 1) // _range[2]
+    
+
     
