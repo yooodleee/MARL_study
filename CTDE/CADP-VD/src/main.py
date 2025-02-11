@@ -46,3 +46,30 @@ def my_main(_run, _config, _log):
 
 
 
+def _get_config(params, arg_name, subfolder):
+    config_name = None
+    
+    for _i, _v in enumerate(params):
+        if _v.split("=")[0] == arg_name:
+            config_name = _v.split("=")[1]
+            del params[_i]
+            break
+    
+    if config_name is not None:
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                "config",
+                subfolder,
+                "{}.yaml",format(config_name)
+            ), "r"
+        ) as f:
+            try:
+                config_dict = yaml.load(f)
+            
+            except yaml.YAMLError as exc:
+                assert False, "{}.yaml error: {}".format(config_name, exc)
+        
+        return config_dict
+
+
