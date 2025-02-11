@@ -33,4 +33,10 @@ class ValueNorm(nn.Module):
         self.reset_parameters()
     
 
+    def reset_parameters(self):
+        self.running_mean.zero_()
+        self.running_mean_sq.zero_()
+        self.debiasing_term.zero_()
+    
+
     
