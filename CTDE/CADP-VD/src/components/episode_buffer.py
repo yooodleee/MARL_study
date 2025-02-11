@@ -107,4 +107,14 @@ class EpisodeBatch:
         self._setup_data(scheme, self.groups if groups is None else groups, self.batch_size, self.max_seq_length)
     
 
+    def to(self, device):
+        for k, v in self.data.transition_data.items():
+            self.data.transition_data[k] = v.to(device)
+        
+        for k, v in self.data.episode_data.items():
+            self.data.episode_data[k] = v.to(device)
+        
+        self.device = device
+    
+
     
