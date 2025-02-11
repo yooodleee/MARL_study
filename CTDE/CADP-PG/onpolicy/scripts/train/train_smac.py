@@ -76,3 +76,22 @@ def make_eval_env(all_args):
 
 
 
+def parse_args(args, parser):
+
+    parser.add_argument("--map_name", type=str, default='3m', help="Which smac map to run on")
+    parser.add_argument("--add_move_state", action='store_true', default=False)
+    parser.add_argument("--add_local_obs", action='store_true', default=False)
+    parser.add_argument("--add_distance_state", action='store_true', default=False)
+    parser.add_argument("--add_enemy_action_state", action='store_true', default=False)
+    parser.add_argument("--add_agent_id", action='store_true', default=False)
+    parser.add_argument("--add_visible_state", action='store_true', default=False)
+    parser.add_argument("--add_xy_state", action='store_true', default=False)
+    parser.add_argument("--use_state_agent", action='store_true', default=False)
+    parser.add_argument("--use_mustalive", action='store_true', default=False)
+    parser.add_argument("--sight_range", type=int, default=False)
+
+    all_args = parser.parse_kown_args(args)[0]
+
+    return all_args
+
+
