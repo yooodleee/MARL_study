@@ -159,4 +159,16 @@ class EpisodeBatch:
                 target[new_k][_slices] = v.view_as(target[new_k][_slices])
     
 
+    def _check_safe_view(self, v, dest):
+        idx = len(v.shape) - 1
+        
+        for s in dest.shape[::-1]:
+            if v.shape[idx] != s:
+                if s != 1:
+                    raise ValueError("Unsafe reshape of {} to {}".format(v.shape, dest.shape))
+
+            else:
+                idx -= 1
+    
+
     
