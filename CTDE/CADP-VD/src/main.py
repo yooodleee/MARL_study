@@ -84,3 +84,14 @@ def recursive_dict_update(d, u):
     return d
 
 
+def config_copy(config):
+    if isinstance(config, dict):
+        return {k: config_copy(v) for k, v in config.items()}
+    
+    elif isinstance(config, list):
+        return [config_copy(v) for v in config]
+    
+    else:
+        return deepcopy(config)
+
+
