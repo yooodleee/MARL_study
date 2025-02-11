@@ -252,4 +252,12 @@ class EpisodeBatch:
             return 1 + (_range[1] - _range[0] - 1) // _range[2]
     
 
+    def _new_data_sn(self):
+        new_data = SN()
+        new_data.transition_data = {}
+        new_data.episode_data = {}
+
+        return new_data
+    
+
     
