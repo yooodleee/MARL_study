@@ -70,4 +70,18 @@ class ValueNorm(nn.Module):
         self.debiasing_term.mul_(weight).add_(1.0 * (1.0 - weight))
     
 
+    def normalize(self, input_vector):
+
+        # Make sure input is float32
+        if type(input_vector) == np.ndarray:
+            input_vector = torch.from_numpy(input_vector)
+        
+        input_vector = input_vector.to(self.running_mean.device)    # no elegant, but works in most cases.
+
+        mean, var = self.running_mean_var()
+        out = (input_vector - mean[(None,) * self.norm_axes]) / torch.sqrt(var)[(None,) * self.norm_axes]
+
+        return out
+    
+
     
