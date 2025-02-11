@@ -47,4 +47,27 @@ class ValueNorm(nn.Module):
         return debiased_mean, debiased_var
     
 
+    @torch.no_grad()
+    def update(self, input_vector):
+        if type(input_vector) == np.ndarray:
+            input_vector = torch.from_numpy(input_vector)
+        
+        input_vector = input_vector.to(self.running_mean.device)    # not elegant, but works in most case.
+
+        batch_mean = input_vector.mean(dim=tuple(range(self.norm_axes)))
+        batch_sq_mean = (input_vector ** 2).mean(dim=tuple(range(self.norm_axes)))
+
+
+        if self.per_element_update:
+            batch_size = np.prod(input_vector.size())[:self.norm_axes]
+            weight = self.beta ** batch_size
+        
+        else:
+            weight = self.beta
+        
+        self.running_mean.mul_(weight).add_(batch_mean * (1.0 - weight))
+        self.running_mean_sq.mul_(weight).add_(batch_sq_mean * (1.0 - weight))
+        self.debiasing_term.mul_(weight).add_(1.0 * (1.0 - weight))
+    
+
     
