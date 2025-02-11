@@ -302,3 +302,27 @@ class EpisodeBatch:
 
 
 
+class ReplayBuffer(EpisodeBatch):
+
+    def __init__(
+            self,
+            scheme,
+            groups,
+            buffer_size,
+            max_seq_length,
+            preprocess=None,
+            device="cpu"):
+        
+        super(ReplayBuffer, self).__init__(scheme, 
+                                           groups, 
+                                           buffer_size, 
+                                           max_seq_length, 
+                                           preprocess=preprocess,
+                                           device=device)
+        
+        self.buffer_size = buffer_size  # same as self.batch_size but more explicit.
+        self.buffer_index = 0
+        self.episodes_in_buffer = 0
+    
+
+    
