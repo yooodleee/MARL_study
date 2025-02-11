@@ -84,4 +84,19 @@ class ValueNorm(nn.Module):
         return out
     
 
-    
+    def denormalize(self, input_vector):
+        """
+        Transform normalized data back into original distribution.
+        """
+        
+        if type(input_vector) == np.ndarray:
+            input_vector = torch.from_numpy(input_vector)
+        
+        input_vector = input_vector.to(self.running_mean.device)    # not elegant, but works in most cases.
+
+        mean, var = self.running_mean_var()
+        out = input_vector * torch.sqrt(var)[(None,) * self.norm_axes] + mean[(None,) * self.norm_axes]
+
+        out = out.cpu().numpy()
+
+        return out
