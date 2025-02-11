@@ -95,3 +95,42 @@ def config_copy(config):
         return deepcopy(config)
 
 
+if __name__ == "__main__":
+    params = deepcopy(sys.argv)
+
+    
+    # Get the defaults from default.yaml
+    with open(
+        os.path.join(
+            os.path.dirname(__file__),
+            "config",
+            "default.yaml",
+        ),
+        "r"
+    ) as f:
+        try:
+            config_dict = yaml.load(f)
+        
+        except yaml.YAMLError as exc:
+            assert False, "default.yaml error: {}".format(exc)
+    
+
+    # Load algorithm and env base configs
+    env_config = _get_config(params, "--env-config", "envs")
+    alg_config = _get_config(params, "--config", "algs")
+
+    # config_dict = {**config_dict, **env_config, **alg_config}
+    config_dict = recursive_dict_update(config_dict, env_config)
+    config_dict = recursive_dict_update(config_dict, alg_config)
+
+
+    # now add all the config to sacred
+    ex.add_config(config_dict)
+
+
+    # Save to disk by default for sacred
+    logger.info("Saving to FileStorageObserver in results/sacred.")
+    file_obs_path = os.path.join(results_path, "sacred")
+    ex.observers.append(FileStorageObserver.create(file_obs_path))
+
+    ex.run_commandline(params)
