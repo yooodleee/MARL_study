@@ -21,4 +21,11 @@ class DecayThenFlatSchedule():
             self.exp_scailing = (-1) * self.time_length / np.log(self.finish) if self.finish > 0 else 1
     
 
+    def eval(self, T):
+        if self.decay in ["linear"]:
+            return max(self.finish, self.start - self.delta * T)
+        
+        elif self.decay in ["exp"]:
+            return min(self.start, np.exp(-T / self.exp_scailing))
     
+    pass
