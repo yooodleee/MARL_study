@@ -111,4 +111,82 @@ class BasicMAC:
         )
     
 
+    def init_hidden(self, batch_size):
+        # bav
+        self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)
     
+
+    def parameters(self):
+
+        return self.agent.parameters()
+
+
+    def load_state(self, other_mac):
+        self.agent.load_state_dict(other_mac.agent.state_dict())
+    
+
+    def cuda(self):
+        self.agent.cuda()
+    
+
+    def save_models(self, path):
+        torch.save(
+            self.agent.state_dict(),
+            "{}/agent.torch".format(path)
+        )
+    
+
+    def load_models(self, path):
+        self.agent.load_state_dict(
+            torch.load("{}/agent.torch".format(path), map_location=lambda storage, loc: storage)
+        )
+
+    
+    def _build_agents(self, input_shape):
+        self.agent = agent_REGISTRY[self.args.agent](input_shape, self.args)
+    
+
+    def _build_inputs(self, batch, t):
+        """
+        Assumes homogenous agents with flat observations.
+        Other MACs might want to e.g. delegate building inputs to each agent.
+        """
+
+        bs = batch.batch_size
+        inputs = []
+        inputs.append(batch["obs"][:, t])   # blav
+
+        if self.args.obs_last_action:
+            if t == 0:
+                inputs.append(torch.zeros_like(batch["actions_onehot"][:, t]))
+            
+            else:
+                inputs.append(batch["actions_onehot"][:, t-1])
+        
+        if self.args.obs_agent_id:
+            inputs.append(
+                torch.eye(self.n_agents, device=batch.device).unsqueeze(0).expand(bs, -1, -1)
+            )
+        
+        inputs = torch.cat(
+            [
+                x.reshape(bs * self.n_agents, -1)
+                for x in inputs
+            ],
+            dim=1
+        )
+
+        return inputs
+    
+
+    def _get_input_shape(self, scheme):
+        input_shape = scheme["obs"]["vshape"]
+
+        if self.args.obs_last_action:
+            input_shape += scheme["actions_onehot"]["vshape"][0]
+        
+        if self.args.obs_agent_id:
+            input_shape += self.n_agents
+        
+
+        return input_shape
