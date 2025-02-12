@@ -14,3 +14,10 @@ class Transform:
 
 
 
+class OneHot(Transform):
+
+    def __init__(self, out_dim):
+        self.out_dim = out_dim
+    
+
+    
