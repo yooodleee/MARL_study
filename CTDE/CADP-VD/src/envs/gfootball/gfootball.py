@@ -317,4 +317,11 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return self.obs_dim
     
 
+    def get_avail_actions(self):
+        """
+        Returns the available acts of all agents in a list.
+        """
+        return [[1 for _ in range(self.n_actions)] for agent_id in range(self.n_agents)]
+    
+
     
