@@ -488,4 +488,116 @@ class StarCraft2Env(MultiAgentEnv):
         self.force_restarts += 1
     
 
+    def step(self, actions):
+        """A single env step. Returns reward, terminated, info."""
+        actions_int = [int(a) for a in actions]
+
+        self.last_action = np.eye(self.n_actions)[np.array(actions_int)]
+
+
+        # Collect individual acts.
+        sc_actions = []
+        if self.debug:
+            logging.debug("Actions".center(60, "-"))
+        
+
+        for a_id, action in enumerate(actions_int):
+            if not self.heuristic_ai:
+                sc_action = self.get_agent_action(a_id, action)
+            
+            else:
+                sc_action, action_num = self.get_agent_action_heuristic(
+                    a_id, action
+                )
+                actions[a_id] = action_num
+            
+            if sc_action:
+                sc_actions.append(sc_action)
+        
+
+        # Send act request
+        req_actions = sc_pb.RequestAction(actions=sc_actions)
+        try:
+            self._controller.actions(req_actions)
+            # Make step in SC2, i.e. apply acts
+            self._controller.step(self._step_mul)
+            # Observe here so that know if the episode is over.
+            self._obs = self._controller.observe()
+        except (protocol.ProtocolError, protocol.ConnectionError):
+            self.full_restart()
+
+            return 0, True, {}
+        
+        self._total_steps += 1
+        self._episode_steps += 1
+
+
+        # Update units.
+        game_end_code = self.update_units()
+
+        terminated = False
+        reward = self.reward_battle()
+        info = {"battle_won": False}
+
+
+        # Count units that are still alive.
+        dead_allies, dead_enemies = 0, 0
+        for _al_id, al_unit in self.agents.items():
+            if al_unit.health == 0:
+                dead_allies += 1
+        
+        for _e_id, e_unit in self.enemies.items():
+            if e_unit.health == 0:
+                dead_enemies += 1
+        
+        info["dead_allies"] = dead_allies
+        info["dead_enemies"] = dead_enemies
+
+        if game_end_code is not None:
+            # Battle is over.
+            terminated = True
+            self.battles_game += 1
+
+            if game_end_code == 1 and not self.win_counted:
+                self.battles_won += 1
+                self.win_counted = True
+                info["battle_won"] = True
+
+                if not self.reward_sparse:
+                    reward += self.reward_win
+                
+                else:
+                    reward = 1
+            
+            elif game_end_code == -1 and not self.defeat_counted:
+                self.defeat_counted = True
+
+                if not self.reward_sparse:
+                    reward += self.reward_defeat
+                else:
+                    reward += -1
+        
+        elif self._episode_steps >= self.episode_limit:
+            # Episode limit reached
+            terminated = True
+            if self.continuing_episode:
+                info["episode_limit"] = True
+            
+            self.battles_game += 1
+            self.timeouts += 1
+        
+        if self.debug:
+            logging.debug("Reward = {}".format(reward).center(60, "-"))
+        
+        if terminated:
+            self._episode_count += 1
+        
+        if self.reward_scale:
+            reward /= self.max_reward / self.reward_scale_rate
+        
+        self.reward = reward
+
+        return reward, terminated, info
+    
+
     
