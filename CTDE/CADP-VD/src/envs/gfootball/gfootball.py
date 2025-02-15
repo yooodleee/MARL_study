@@ -296,4 +296,11 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return self.get_simple_obs(agent_id)
     
 
+    def get_obs_size(self):
+        """
+        Returns the size of the obs.
+        """
+        return self.obs_dim
+    
+
     
