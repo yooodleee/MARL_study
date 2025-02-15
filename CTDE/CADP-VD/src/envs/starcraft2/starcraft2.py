@@ -600,4 +600,116 @@ class StarCraft2Env(MultiAgentEnv):
         return reward, terminated, info
     
 
+    def get_agent_action(self, a_id, action):
+        """Construct the act for agent a_id."""
+        avail_actions = self.get_avail_actions(a_id)
+        assert (
+            avail_actions[action] == 1
+        ), "Agent {} cannot perform action {}".format(a_id, action)
+
+        unit = self.get_unit_by_id(a_id)
+        tag = unit.tag
+        x = unit.pos.x
+        y = unit.pos.y
+
+        if action == 0:
+            # no-op (valid only when dead)
+            assert unit.health == 0, "No-op only available for dead agents."
+            if self.debug:
+                logging.debug("Agent {}: Dead".format(a_id))
+            
+            return None
+        
+        elif action == 1:
+            # stop
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=actions["stop"],
+                unit_tags=[tag],
+                queue_command=False,
+            )
+            if self.debug:
+                logging.debug("Agent {}: Stop".format(a_id))
+        
+        elif action == 2:
+            # move north
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=actions["move"],
+                target_world_space_pos=sc_common.Point2D(
+                    x=x, y=y + self._move_amount
+                ),
+                unit_tags=[tag],
+                queue_command=False,
+            )
+            if self.debug:
+                logging.debug("Agent {}: Move North".format(a_id))
+        
+        elif action == 3:
+            # move south
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=actions["move"],
+                target_world_space_pos=sc_common.Point2D(
+                    x=x, y=y - self._move_amount
+                ),
+                unit_tags=[tag],
+                queue_command=False,
+            )
+            if self.debug:
+                logging.debug("Agent {}: Move South".format(a_id))
+        
+        elif action == 4:
+            # move east
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=actions["move"],
+                target_world_space_pos=sc_common.Point2D(
+                    x=x + self._move_amount, y=y
+                ),
+                unit_tags=[tag],
+                queue_command=False,
+            )
+            if self.debug:
+                logging.debug("Agent {}: Move East".format(a_id))
+        
+        elif action == 5:
+            # move west
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=actions["move"],
+                target_world_space_pos=sc_common.Point2D(
+                    x=x - self._move_amount, y=y
+                ),
+                unit_tags=[tag],
+                queue_command=False,
+            )
+            if self.debug:
+                logging.debug("Agent {}: Move West".format(a_id))
+        
+        else:
+            # attack/heal units that are in range
+            target_id = action - self.n_actions_no_attack
+            if self.map_type == "MMM" and unit.unit_type == self.medivac_id:
+                target_unit = self.agents[target_id]
+                action_name = "heal"
+            
+            else:
+                target_unit = self.enemies[target_id]
+                action_name = "attack"
+            
+            action_id = actions[action_name]
+            target_tag = target_unit.tag
+
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=action_id,
+                target_unit_tag=target_tag,
+                unit_tags=[tag],
+                queue_command=False,
+            )
+            if self.debug:
+                logging.debug(
+                    "Agent {} {}s unit # {}".format(a_id, action_name, target_id)
+                )
+        
+        sc_action = sc_pb.Action(action_raw=r_pb.ActionRaw(unit_command=cmd))
+
+        return sc_action
+    
+
     
