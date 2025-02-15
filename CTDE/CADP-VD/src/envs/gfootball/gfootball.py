@@ -106,4 +106,20 @@ class GoogleFootbllEnv(MultiAgentEnv):
         self.obs = None
     
 
+    def check_if_done(self):
+        cur_obs = self.env.unwrapped.observation()[0]
+        ball_loc = cur_obs['ball']
+        ours_loc = cur_obs['left_team'][-self.n_agents]
+
+        if ball_loc[0] < 0 or any(ours_loc[:, 0] < 0):
+            """
+            This is based on the CDS paper:
+                'We make a small and reasonable change to the half-court offensive scenarios:
+                our players will lose if they or the ball returns to our half-court.'
+            """
+            return True
+        
+        return False
+    
+
     
