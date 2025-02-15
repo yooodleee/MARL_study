@@ -30,3 +30,34 @@ from s2clientprotocol import debug_pb2 as d_pb
 
 
 
+races = {
+    "R": sc_common.Random,
+    "P": sc_common.Protoss,
+    "T": sc_common.Terran,
+    "Z": sc_common.Zerg,
+}
+
+
+difficulties = {
+    "1": sc_pb.VeryEasy,
+    "2": sc_pb.Easy,
+    "3": sc_pb.Medium,
+    "4": sc_pb.MediumHard,
+    "5": sc_pb.Hard,
+    "6": sc_pb.Harder,
+    "7": sc_pb.VeryHard,
+    "8": sc_pb.CheatVision,
+    "9": sc_pb.CheatMoney,
+    "10": sc_pb.CheatInsane,
+}
+
+
+actions = {
+    "move": 16, # target: PointOrUnit
+    "attack": 23,   # target: PointOrUnit
+    "stop": 4,  # target: None
+    "heal": 386,    # Unit
+}
+
+
+
