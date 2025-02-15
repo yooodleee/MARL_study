@@ -167,4 +167,30 @@ class StarCraft2Renderer:
         )
     
 
+    def draw_base_map(self, surf):
+        """Draw the base map."""
+
+        hmap_feature = features.SCREEN_FEATURES.height_map
+        hmap = self.env.terrain_height * 255
+        hmap = hmap.astype(np.unit8)
+
+        if (
+            self.env.map_name == "corridor"
+            or self.env.map_name == "so_many_baneling"
+            or self.env.map_name == "2s_vs_1sc"
+        ):
+            hmap = np.flip(hmap)
+        
+        else:
+            hmap = np.rot90(hmap, axes=(1, 0))
+        
+        if not hmap.any():
+            hmap = hmap + 100
+        
+        hmap_color = hmap_feature.color(hmap)
+        out = hmap_color * 0.6
+
+        surf.build_np_array(out)
+    
+
     
