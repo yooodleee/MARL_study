@@ -163,4 +163,121 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return 100, done, info
     
 
+    def get_simple_obs(self, index=-1):
+        full_obs = self.env.unwrapped.observation()[0]
+        simple_obs = []
+
+        if self.env_name == 'academy_3_vs_1_with_keeper':
+            if index == -1:
+                # global state, absolute position
+                simple_obs.append(full_obs['left_team'][-self.n_agents:].reshape(-1))
+                simple_obs.append(full_obs['left_team_direction'][-self.n_agents:].reshape(-1))
+
+                simple_obs.append(full_obs['right_team'].reshape(-1))
+                simple_obs.append(full_obs['right_team_direction'].reshape(-1))
+
+                simple_obs.append(full_obs['ball'])
+                simple_obs.append(full_obs['ball_direction'])
+            else:
+                # local state, relative position
+                ego_position = full_obs['left_team'][-self.n_agents + index].reshape(-1)
+                simple_obs.append(ego_position)
+                simple_obs.append(
+                    (np.delete(full_obs['left_team'][-self.n_agents:], index, axis=0) - ego_position).reshape(-1)
+                )
+
+                simple_obs.append(full_obs['left_team_direction'][-self.n_agents + index].reshape(-1))
+                simple_obs.append(
+                    np.delete(full_obs['left_team_direction'][-self.n_agents:], index, axis=0).reshape(-1)
+                )
+
+                simple_obs.append((full_obs['right_team'] - ego_position).reshape(-1))
+                simple_obs.append(full_obs['right_team_direction'].reshape(-1))
+
+                simple_obs.append(full_obs['ball'][:2] - ego_position)
+                simple_obs.append(full_obs['ball'][-1].reshape(-1))
+                simple_obs.append(full_obs['ball_direction'])
+
+        elif self.env_name == 'academy_counterattack_hard':
+            if index == -1:
+                # global state, absolute position
+                simple_obs.append(full_obs['left_team'][-self.n_agents:].reshape(-1))
+                simple_obs.append(full_obs['left_team_direction'][-self.n_agents:].reshape(-1))
+
+                simple_obs.append(full_obs['right_team'][0])
+                simple_obs.append(full_obs['right_team'][1])
+                simple_obs.append(full_obs['right_team'][2])
+
+                simple_obs.append(full_obs['right_team_direction'][0])
+                simple_obs.append(full_obs['right_team_direction'][1])
+                simple_obs.append(full_obs['right_team_direction'][2])
+
+                simple_obs.append(full_obs['ball'])
+                simple_obs.append(full_obs['ball_direction'])
+
+            else:
+                # local state, relative position
+                ego_position = full_obs['left_team'][-self.n_agents + index].reshape(-1)
+                simple_obs.append(ego_position)
+                simple_obs.append(
+                    (np.delete(full_obs['left_team'][-self.n_agents:], index, axis=0) - ego_position).reshape(-1)
+                )
+
+                simple_obs.append(full_obs['left_team_direction'][-self.n_agents + index].reshape(-1))
+                simple_obs.append(
+                    np.delete(full_obs['left_team_direction'][-self.n_agents:], index, axis=0).reshape(-1)
+                )
+
+                simple_obs.append(full_obs['right_team'][0] - ego_position)
+                simple_obs.append(full_obs['right_team'][1] - ego_position)
+                simple_obs.append(full_obs['right_team'][2] - ego_position)
+
+                simple_obs.append(full_obs['right_team_direction'][0])
+                simple_obs.append(full_obs['right_team_direction'][1])
+                simple_obs.append(full_obs['right_team_direction'][2])
+
+                simple_obs.append(full_obs['ball'][:2] - ego_position)
+                simple_obs.append(full_obs['ball'][-1].reshape(-1))
+                simple_obs.append(full_obs['ball_direction'])
+
+        
+        elif self.env_name == 'academy_counterattack_easy':
+            if index == -1:
+                # global state, absolute position
+                simple_obs.append(full_obs['left_team'][-self.n_agents:].reshape(-1))
+                simple_obs.append(full_obs['left_team_direction'][-self.n_agents:].reshape(-1))
+
+                simple_obs.append(full_obs['right_team'][0])
+                simple_obs.append(full_obs['right_team'][1])
+                simple_obs.append(full_obs['right_team_direction'][0])
+                simple_obs.append(full_obs['right_team_direction'][1])
+                simple_obs.append(full_obs['ball'])
+                simple_obs.append(full_obs['ball_direction'])
+            else:
+                # local state, relative position
+                ego_position = full_obs['left_team'][-self.n_agents + index].reshape(-1)
+                simple_obs.append(ego_position)
+                simple_obs.append(
+                    (np.delete(full_obs['left_team'][-self.n_agents:], index, axis=0) - ego_position).reshape(-1)
+                )
+
+                simple_obs.append(full_obs['left_team_direction'][-self.n_agents + index].reshape(-1))
+                simple_obs.append(
+                    np.delete(full_obs['left_team_direction'][-self.n_agents:], index, axis=0).reshape(-1)
+                )
+
+                simple_obs.append(full_obs['right_team'][0] - ego_position)
+                simple_obs.append(full_obs['right_team'][1] - ego_position)
+                simple_obs.append(full_obs['right_team_direction'][0])
+                simple_obs.append(full_obs['right_team_direction'][1])
+
+                simple_obs.append(full_obs['ball'][:2] - ego_position)
+                simple_obs.append(full_obs['ball'][-1].reshape(-1))
+                simple_obs.append(full_obs['ball_direction'])
+        
+        
+        simple_obs = np.concatenate(simple_obs)
+        return simple_obs
+    
+
     
