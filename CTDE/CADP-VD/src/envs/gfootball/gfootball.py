@@ -338,4 +338,14 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return self.action_space[0].n
     
 
+    def reset(self):
+        """
+        Returns initial obs and states.
+        """
+        self.time_step = 0
+        self.env.reset()
+
+        return self.get_obs(), self.get_state()
+    
+
     
