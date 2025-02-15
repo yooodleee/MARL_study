@@ -372,4 +372,9 @@ class StarCraft2Renderer:
         )
     
 
-    
+    def draw_screen(self, surf):
+        """Draw the screen area."""
+
+        self.draw_base_map(surf)
+        self.draw_units(surf)
+        self.draw_overlay(surf)
