@@ -424,4 +424,49 @@ class StarCraft2Env(MultiAgentEnv):
         )
     
 
+    def reset(self):
+        """
+        Reset the env. Required after each full episode. Returns initial obs
+        and states.
+        """
+        self._episode_steps = 0
+        if self._episode_count == 0:
+            # Launch StarCraft II
+            self._launch()
+        
+        else:
+            self._restart()
+        
+
+        # Info kept for counting the reward
+        self.death_tracker_ally = np.zeros(self.n_agents)
+        self.death_tracker_enemy = np.zeros(self.n_enemies)
+        self.previous_ally_units = None
+        self.previous_enemy_units = None
+        self.win_counted = False
+        self.defeat_counted = False
+
+        self.last_action = np.zeros((self.n_agents, self.n_actions))
+
+
+        if self.heuristic_ai:
+            self.heuristic_targets = [None] * self.n_agents
+        
+        try:
+            self.obs = self._controller.observe()
+            self.init_units()
+        except (protocol.ProtocolError, protocol.ConnectionError):
+            self.full_restart()
+        
+
+        if self.debug:
+            logging.debug(
+                "Started Episode {}".format_map(self._episode_count).center(60, "*")
+            )
+        
+
+        return self.get_obs(), self.get_state()
+    
+
+
     
