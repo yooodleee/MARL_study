@@ -331,4 +331,11 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return self.get_avail_actions()[agent_id]
     
 
+    def get_total_actions(self):
+        """
+        Returns the total num of acts an agent could ever take.
+        """
+        return self.action_space[0].n
+    
+
     
