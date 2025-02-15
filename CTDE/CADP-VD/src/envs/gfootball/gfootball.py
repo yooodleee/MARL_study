@@ -280,4 +280,13 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return simple_obs
     
 
+    def get_obs(self):
+        """
+        Returns all agent obs in a list.
+        """
+        obs = [self.get_simple_obs(i) for i in range(self.n_agents)]
+
+        return obs
+    
+
     
