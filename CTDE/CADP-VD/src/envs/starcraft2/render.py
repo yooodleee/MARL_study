@@ -335,4 +335,41 @@ class StarCraft2Renderer:
                     break
     
 
+    def draw_overlay(self, surf):
+        """Draw the overlay describing resources."""
+
+        obs = self.obs.observation
+        times, steps = zip(*self._game_times)
+        sec = obs.game_loop // 22.4
+        
+        surf.write_screen(
+            self._font_large,
+            colors.green,
+            (-0.2, 0.2),
+            "Score: %s, Step: %s, %.1f/s, Time: %d:%02d"
+            % (
+                self.score,
+                self.step,
+                sum(steps) / (sum(times) or 1),
+                sec // 60,
+                sec % 60,
+            ),
+            align="right",
+        )
+
+        surf.write_screen(
+            self._font_large,
+            colors.green * 0.8,
+            (-0.2, 1.2),
+            "APM: %d, EPM: %d, FPS: O:%.1f, R:%.1f"
+            % (
+                obs.score.score_details.current_apm,
+                obs.score.score_details.current_effective_apm,
+                len(times) / (sum(times) or 1),
+                len(self._render_times) / (sum(self._render_times) or 1),
+            ),
+            align="right",
+        )
+    
+
     
