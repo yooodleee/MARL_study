@@ -132,5 +132,39 @@ class StarCraft2Renderer:
 
         return self._name_lengths[key]
 
+
+    def render(self, mode):
+        self.obs = self.env._obs
+        self.score = self.env.reward
+        self.step = self.env._episode_steps
+
+        now = time.time()
+        self._game_times.append(
+            (
+                now - self._last_time,
+                max(
+                    1, self.obs.observation.game_loop - self.obs.observation.game_loop
+                ),
+            )
+        )
+
+        if mode == "human":
+            pygame.event.pump()
+        
+        self._surf.draw(self._surf)
+        observation = np.array(pygame.surfarray.pixels3d(self.display))
+
+        if mode == "human":
+            pygame.display.flip()
+
+        self._last_time = now
+        self._last_game_loop = self.obs.observation.game_loop
+        # self._obs_queue.put(self.obs)
+
+        return (
+            np.transpose(observation, axes=(1, 0, 2))
+            if mode == "rgb_array" else None
+        )
     
-            
+
+    
