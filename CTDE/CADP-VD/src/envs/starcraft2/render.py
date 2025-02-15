@@ -103,4 +103,34 @@ class StarCraft2Renderer:
         self._font_large = pygame.font.Font(None, self._scale)
 
     
+    def close(self):
+        pygame.display.quit()
+        pygame.quit()
     
+
+    def _get_units(self):
+        for u in sorted(
+            self.obs.observation.raw_data.units,
+            key=lambda u: (u.pos.z, u.owner != 16, -u.radius, u.tag),
+        ):
+            yield u, point.Point.build(u.pos)
+    
+
+    def get_unit_name(self, surf, name, radius):
+        """Get a length limited unit name for drawing units."""
+
+        key = (name, radius)
+        if key not in self._name_lengths:
+            max_len = surf.world_to_surf.fwd_dist(radius * 1.6)
+
+            for i in range(len(name)):
+                if self._font_small.size(name[: i + 1])[0] > max_len:
+                    self._name_lengths[key] = name[:i]
+                    break
+            else:
+                self._name_lengths[key] = name
+
+        return self._name_lengths[key]
+
+    
+            
