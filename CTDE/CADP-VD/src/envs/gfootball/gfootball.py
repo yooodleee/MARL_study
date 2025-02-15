@@ -303,4 +303,11 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return self.obs_dim
     
 
+    def get_state(self):
+        """
+        Returns the global state.
+        """
+        return self.get_simple_obs(-1)
+    
+
     
