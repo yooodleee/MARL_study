@@ -122,4 +122,45 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return False
     
 
+    def step(self, _actions):
+        """
+        Returns reward, terminated, info.
+        """
+        if torch.is_tensor(_actions):
+            actions = _actions.cpu().numpy()
+        else:
+            actions = _actions
+        
+        self.time_step += 1
+        obs, rewards, done, info = self.env.step(actions.tolist())
+        info["battle_won"] = False
+
+        self.obs = obs
+
+        if self.time_step >= self.episode_limit:
+            info["episode_limit"] = True
+            done = True
+        
+        if self.env_name in ['academy_3_vs_1_with_keeper', 'academy_counterattack_hard', 'academy_counterattack_easy']:
+            if self.check_if_done():
+                done = True
+        
+        """
+        This is based on the CDS paper:
+            "Environmental reward only occurs at the end of the game.
+            They will get +100 if they win, else get -1."
+
+        If done=False, the reward is -1.
+        If done=True and sum(rewards) <= 0 the reward is 1.
+        If done=True and sum(rewards) > 0 the reward is 100.
+        """
+
+        if sum(rewards) <= 0:
+            return -int(done), done, info
+        
+        info["battle_won"] = True
+
+        return 100, done, info
+    
+
     
