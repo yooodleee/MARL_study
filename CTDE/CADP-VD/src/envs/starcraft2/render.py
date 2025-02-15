@@ -193,4 +193,146 @@ class StarCraft2Renderer:
         surf.build_np_array(out)
     
 
+    def draw_units(self, surf):
+        """Draw the units."""
+
+        unit_dict = None  # Cache the units { tag: unit_proto} for orders.
+        tau = 2 * math.pi
+
+        for u, p in self._get_units():
+            fraction_damage = clamp(
+                (u.health_max - u.health) / (u.health_max or 1), 0, 1
+            )
+            surf.draw_circle(colors.PLAYER_ABSOLUTE_PALETTE[u.owner], p, u.radius)
+
+            if fraction_damage > 0:
+                surf.draw_circle(
+                    colors.PLAYER_ABSOLUTE_PALETTE[u.owner] // 2,
+                    p, u.radius * fraction_damage
+                )
+            
+            surf.draw_circle(colors.black, p, u.radius, thickness=1)
+
+            if self.static_data.unit_stats[u.unit_type].movement_speed > 0:
+                surf.draw_arc(
+                    colors.white,
+                    p,
+                    u.radius,
+                    u.facing - 0.1,
+                    u.facing + 0.1,
+                    thickness=1,
+                )
+            
+            def draw_arc_ratio(
+                    color,
+                    world_loc,
+                    radius,
+                    start,
+                    end,
+                    thickness=1
+            ):
+                surf.draw_arc(
+                    color, world_loc, radius, start * tau, end * tau, thickness
+                )
+            
+
+            if u.shield and u.shield_max:
+                draw_arc_ratio(
+                    colors.blue, 
+                    p, 
+                    u.radius - 0.05, 
+                    0, 
+                    u.shield / u.shield_max,
+                )
+            
+            if u.energy and u.energy_max:
+                draw_arc_ratio(
+                    colors.purple * 0.9,
+                    p,
+                    u.radius - 0.1,
+                    0,
+                    u.energy / u.energy_max,
+                )
+            
+            elif u.orders and 0 < u.orders[0].progress < 1:
+                draw_arc_ratio(
+                    colors.cyan,
+                    p,
+                    u.radius - 0.15,
+                    0,
+                    u.orders[0].progress,
+                )
+            
+            if u.buff_duration_remain and u.buff_duration_max:
+                draw_arc_ratio(
+                    colors.white,
+                    p,
+                    u.radius - 0.2,
+                    0,
+                    u.buff_duration_remaon / u.buff_duration_max,
+                )
+            
+            if u.attack_upgrade_level:
+                draw_arc_ratio(
+                    self.upgrade_colors[u.attack_upgrade_level],
+                    p,
+                    u.radius - 0.25,
+                    0.18,
+                    0.22,
+                    thickness=3,
+                )
+
+            if u.armor_upgrade_level:
+                draw_arc_ratio(
+                    self.upgrade_colors[u.armor_upgrade_level],
+                    p,
+                    u.radius - 0.25,
+                    0.23,
+                    0.27,
+                    thickness=3,
+                )
+            
+            if u.shield_upgrade_level:
+                draw_arc_ratio(
+                    self.upgrade_colors[u.shield_upgrade_level],
+                    p,
+                    u.radius - 0.25,
+                    0.28,
+                    0.32,
+                    thickness=3,
+                )
+            
+            def write_small(loc, s):
+                surf.write_world(self._font_small, colors.white, loc, str(s))
+
+            name = self.get_unit_name(
+                surf,
+                self.static_data.units.get(u.unit_type, "<none>"),
+                u.radius,
+            )
+
+            if name:
+                write_small(p, name)
+            
+            start_point = p
+            for o in u.orders:
+                target_point = None
+                if o.HasField("target_unit_tag"):
+                    if unit_dict is None:
+                        unit_dict = {
+                            t.tag: t
+                            for t in self.obs.observation.raw_data.units
+                        }
+                    target_unit = unit_dict.get(o.target_unit_tag)
+                    if target_unit:
+                        target_point = point.Point.build(target_unit.pos)
+                
+                if target_point:
+                    surf.draw_line(colors.cyan, start_point, target_point)
+                    start_point = target_point
+                
+                else:
+                    break
+    
+
     
