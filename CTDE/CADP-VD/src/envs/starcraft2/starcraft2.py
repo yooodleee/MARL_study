@@ -712,4 +712,139 @@ class StarCraft2Env(MultiAgentEnv):
         return sc_action
     
 
+    def get_agent_action_heuristic(self, a_id, action):
+        unit = self.get_unit_by_id(a_id)
+        tag = unit.tag
+
+        target = self.heuristic_targets[a_id]
+        if unit.unit_type == self.medivac_id:
+            if (
+                target is None
+                or self.agents[target].health == 0
+                or self.agents[target].health == self.agents[target].health_max
+            ):
+                min_dist = math.hypot(self.max_distance_x, self.max_distance_y)
+                min_id = -1
+                
+                for al_id, al_unit in self.agents.items():
+                    if al_unit.unit_type == self.medivac_id:
+                        continue
+
+                    if (
+                        al_unit.health != 0
+                        and al_unit.health != al_unit.health_max
+                    ):
+                        dist = self.distance(
+                            unit.pos.x,
+                            unit.pos.y,
+                            al_unit.pos.x,
+                            al_unit.pos.y,
+                        )
+                        if dist < min_dist:
+                            min_dist = dist
+                            min_id = al_id
+                
+                self.heuristic_targets[a_id] = min_id
+                if min_id == -1:
+                    self.heuristic_targets[a_id] = None
+                    return None, 0
+            
+            action_id = actions["heal"]
+            target_tag = self.agents[self.heuristic_targets[a_id]].tag
+        
+        else:
+            if target is None or self.enemies[target].health == 0:
+                min_dist = math.hypot(self.max_distance_x, self.max_distance_y)
+                min_id = -1
+
+                for e_id, e_unit in self.enemies.items():
+                    if (
+                        unit.unit_type == self.marauder_id
+                        and e_unit.unit_type == self.medivac_id
+                    ):
+                        continue
+                    
+                    if e_unit.health > 0:
+                        dist = self.distance(
+                            unit.pos.x, unit.pos.y, e_unit.pos.x, e_unit.pos.y
+                        )
+                        if dist < min_dist:
+                            min_dist = dist
+                            min_id = e_id
+                
+                self.heuristic_targets[a_id] = min_id
+                if min_id == -1:
+                    self.heuristic_targets[a_id] = None
+                    return None, 0
+            
+            action_id = actions["attack"]
+            target_tag = self.enemies[self.heuristic_targets[a_id]].tag
+        
+        action_num = self.heuristic_targets[a_id] + self.n_actions_no_attack
+
+
+        # Check if the act is avaible.
+        if (
+            self.heuristic_rest
+            and self.get_avail_actions(a_id)[action_num] == 0
+        ):
+            
+            # Move towards the target rather than attacking/healing
+            if unit.unit_type == self.medivac_id:
+                target_unit = self.agents[self.heuristic_targets[a_id]]
+            
+            else:
+                target_unit = self.enemies[self.heuristic_targets[a_id]]
+            
+
+            delta_x = target_unit.pos.x - unit.pos.x
+            delta_y = target_unit.pos.y - unit.pos.y
+
+            
+            if abs(delta_x) > abs(delta_y): # east or west
+                if delta_x > 0: # east
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x + self._move_amount, y=unit.pos.y
+                    )
+                    action_num = 4
+                
+                else:   # west
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x - self._move_amount, y=unit.pos.y
+                    )
+                    action_num = 5
+            
+            else:   # north or south
+                if delta_y > 0: # north
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x, y=unit.pos.y + self._move_amount
+                    )
+                    action_num = 2
+                
+                else:   # south
+                    target_pos = sc_common.Point2D(
+                        x=unit.pos.x, y=unit.pos.y - self._move_amount
+                    )
+                    action_num = 3
+            
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=actions["move"],
+                target_world_space_pos=target_pos,
+                unit_tags=[tag],
+                queue_command=False,
+            )
+        else:
+            # Attack/heal the target
+            cmd = r_pb.ActionRawUnitCommand(
+                ability_id=action_id,
+                target_unit_tag=target_tag,
+                unit_tags=[tag],
+                queue_command=False,
+            )
+        
+        sc_action = sc_pb.Action(action_raw=r_pb.ActionRaw(unit_command=cmd))
+
+        return sc_action, action_num
+    
+
     
