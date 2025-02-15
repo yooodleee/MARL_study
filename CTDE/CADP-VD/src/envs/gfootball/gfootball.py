@@ -289,4 +289,11 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return obs
     
 
+    def get_obs_agent(self, agent_id):
+        """
+        Returns obs for agent_id.
+        """
+        return self.get_simple_obs(agent_id)
+    
+
     
