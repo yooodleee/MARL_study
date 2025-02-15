@@ -348,4 +348,28 @@ class GoogleFootbllEnv(MultiAgentEnv):
         return self.get_obs(), self.get_state()
     
 
+    def render(self):
+        pass
+
+
+    def close(self):
+        self.env.close()
     
+
+    def seed(self):
+        pass
+
+
+    def save_replay(self):
+        """
+        Save a replay.
+        """
+        pass
+
+
+    def get_env_info(self):
+        env_info = super().get_env_info()
+        env_info["n_agents"] = self.n_agents
+        env_info["n_enemies"] = self.n_enemies
+
+        return env_info
