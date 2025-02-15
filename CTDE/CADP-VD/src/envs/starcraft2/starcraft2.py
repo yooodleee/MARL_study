@@ -339,4 +339,89 @@ class StarCraft2Env(MultiAgentEnv):
         atexit.register(lambda: self.close())
     
 
+    def _launch(self):
+        """Launch the StarCraft II game."""
+        self._run_config = run_configs.get(version=self.game_version)
+        _map = maps.get(self.map_name)
+
+
+        # Setting up the interface.
+        interface_options = sc_pb.InterfaceOptions(raw=True, score=False)
+        self._sc2_proc = self._run_config.start(
+            window_size=self.window_size, want_rgb=False
+        )
+        self._controller = self._sc2_proc.controller
+
+
+        # Request to create the game
+        create = sc_pb.RequestCreateGame(
+            local_map=sc_pb.LocalMap(
+                map_path=map.path,
+                map_data=self._run_config.map_data(_map.path),
+            ),
+            realtime=False,
+            random_seed=self._seed,
+        )
+        create.player_setup.add(type=sc_pb.Participant)
+        create.player_setup.add(
+            type=sc_pb.Computer,
+            race=races[self._bot_race],
+            difficulty=difficulties[self.difficulty],
+        )
+        self._controller.create_game(create)
+
+        join = sc_pb.RequestJoinGame(
+            race=races[self._agent_race], options=interface_options
+        )
+        self._controller.join_game(join)
+
+
+        game_info = self._controller.game_info()
+        map_info = game_info.start_raw
+        map_play_area_min = map_info.playable_area.p0
+        map_play_area_max = map_info.playable_area.p1
+        self.max_distance_x = map_play_area_max.x - map_play_area_min.x
+        self.max_distance_y = map_play_area_max.y - map_play_area_min.y
+        self.map_x = map_info.map_size.x
+        self.map_y = map_info.map_size.y
+
+
+        if map_info.pathing_grid.bits_per_pixel == 1:
+            vals = np.array(list(map_info.pathing_grid.data)).reshape(
+                self.map_x, int(self.map_y / 8)
+            )
+            self.pathing_grid = np.transpose(
+                np.array(
+                    [
+                        [(b >> i) & 1 for b in row for i in range(7, -1, -1)]
+                        for row in vals
+                    ],
+                    dtype=bool,
+                )
+            )
+        else:
+            self.pathing_grid = np.invert(
+                np.flip(
+                    np.transpose(
+                        np.array(
+                            list(map_info.pathing_grid.data), dtype=np.bool
+                        ).reshape(self.map_x, self.map_y)
+                    ),
+                    axis=1,
+                )
+            )
+        
+        self.terrain_height = (
+            np.flip(
+                np.transpose(
+                    np.array(list(map_info.terrain_height.data)).reshape(
+                        self.map_x, self.map_y
+                    )
+                ),
+                1,
+            )
+            / 255
+        )
+    
+
     
