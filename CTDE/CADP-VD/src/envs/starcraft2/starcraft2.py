@@ -183,5 +183,160 @@ class StarCraft2Env(MultiAgentEnv):
             where max_reward is the maximum possible reward per episode without 
             considering the shield regeneration of Protoss units.
         replay_dir: (str, optional)
-            The 
+            The directory to save replays (default is None). If None, the replay
+            will be saved in Replays directory where StarCraft II is installed.
+        replay_prefix: (str, optional)
+            The prefix of the replay to be saved (default is None). If None, the 
+            name of the map will be used.
+        window_size_x: (int, optional)
+            The length of StarCraft II window size (default is 1920).
+        window_size_y: (int, optional)
+            The height of StarCraft II window size (default is 1200).
+        heuristic_ai: (bool, optional)
+            Whether or not to use a non-learning heuristic AI (default False).
+        heuristic_rest: (bool, optional)
+            At any moment, restrict the acts of the heuristic AI to be chosen from
+            acts available to RL agents (default is False). Ignored if heuristic_ai 
+            == False.
+        debug: (bool, optional)
+            Log messages about obs, state, acts and rewards for debugging purposes
+            (default is False).
         """
+
+        # Map args
+        self.map_name = map_name
+        map_params = get_maps_params(self.map_name)
+        self.n_agents = map_params["n_agents"]
+        self.n_enemies = map_params["n_enemies"]
+        self.episode_limit = map_params["limit"]
+        self._move_amount = move_amount
+        self._step_mul = step_mul
+        self.difficulty = difficulty
+
+        
+        # Observations and state
+        self.obs_own_health = obs_own_health
+        self.obs_all_health = obs_all_health
+        self.obs_instead_of_state = obs_instead_of_state
+        self.obs_last_action = obs_last_actions
+        self.obs_pathing_grid = obs_pathing_grid
+        self.obs_terrain_height = obs_terrain_height
+        self.obs_timestep_number = obs_timestep_number
+        self.state_last_action = state_last_actions
+        self.state_timestep_number = state_timestep_number
+        
+        if self.obs_all_health:
+            self.obs_own_health = True
+        
+        self.n_obs_pathing = 8
+        self.n_obs_height = 9
+
+
+        # Reward args
+        self.reward_sparse = reward_sparse
+        self.reward_only_positive = reward_only_positive
+        self.reward_negative_scale = reward_negative_scale
+        self.reward_death_value = reward_death_value
+        self.reward_win = reward_win
+        self.reward_defeat = reward_defeat
+        self.reward_scale = reward_scale
+        self.reward_scale_rate = reward_scale_rate
+
+
+        # Other
+        self.game_version = game_version
+        self.continuing_episode = continuing_episode
+        self._seed = seed
+        self.heuristic_ai = heuristic_ai
+        self.heuristic_rest = heuristic_rest
+        self.debug = debug
+        self.window_size = (window_size_x, window_size_y)
+        self.replay_dir = replay_dir
+        self.replay_prefix = replay_prefix
+
+
+        # Actions
+        self.n_actions_no_attack = 6
+        self.n_actions_move = 4
+        self.n_actions = self.n_actions_no_attack + self.n_enemies
+
+
+        # Map info
+        self._agent_race = map_params["a_race"]
+        self._bot_race = map_params["b_race"]
+        self.shield_bits_ally = 1 if self._agent_race == "P" else 0
+        self.shield_bits_enemy = 1 if self._bot_race == "P" else 0
+        self.unit_type_bits = map_params["unit_type_bits"]
+        self.map_type = map_params["map_type"]
+        self._unit_types = None
+
+        self.max_reward = (
+            self.n_enemies * self.reward_death_value + self.reward_win
+        )
+
+
+        # Create lists containing the names of attributes returned in states
+        self.ally_state_attr_names = [
+            "health",
+            "energy/cooldown",
+            "rel_x",
+            "rel_y",
+        ]
+        self.enemy_state_attr_names = ["health", "rel_x", "rel_y"]
+
+        if self.shield_bits_ally > 0:
+            self.ally_state_attr_names += ["shield"]
+        
+        if self.shield_bits_enemy > 0:
+            self.enemy_state_attr_names += ["shield"]
+        
+
+        if self.unit_type_bits > 0:
+            bit_attr_names = [
+                "type_{}".format(bit) for bit in range(self.unit_type_bits)
+            ]
+            self.ally_state_attr_names += bit_attr_names
+            self.enemy_state_attr_names += bit_attr_names
+        
+
+        self.unit_dim = 4 + self.shield_bits_ally + self.unit_type_bits
+
+
+        self.agents = {}
+        self.enemies = {}
+        self._episode_count = 0
+        self._episode_steps = 0
+        self._total_steps = 0
+        self._obs = None
+        self.battles_won = 0
+        self.battles_game = 0
+        self.timeouts = 0
+        self.force_restarts = 0
+        self.last_stats = None
+        self.death_tracker_ally = np.zeros(self.n_agents)
+        self.death_tracker_enemy = np.zeros(self.n_enemies)
+        self.previous_ally_units = None
+        self.previous_enemy_units = None
+        self.last_action = np.zeros((self.n_agents, self.n_actions))
+        self._min_unit_type = 0
+        self.marine_id = self.marauder_id = self.medivac_id = 0
+        self.hydralisk_id = self.zergling_id = self.baneling_id = 0
+        self.stalker_id = self.colossus_id = self.zealot_id = 0
+        self.max_distance_x = 0
+        self.max_distance_y = 0
+        self.map_x = 0
+        self.map_y = 0
+        self.reward = 0
+        self.renderer = None
+        self.terrain_height = None
+        self.pathing_grid = None
+        self._run_config = None
+        self._sc2_proc = None
+        self._controller = None
+
+
+        # Try to avoid leaking SC2 processes on shutdown.
+        atexit.register(lambda: self.close())
+    
+
+    
