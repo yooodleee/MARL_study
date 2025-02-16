@@ -911,4 +911,10 @@ class StarCraft2Env(MultiAgentEnv):
     
 
 
+    def get_total_actions(self):
+        """Returns the total num of acts an agent could ever take."""
+
+        return self.n_actions
+    
+
     
