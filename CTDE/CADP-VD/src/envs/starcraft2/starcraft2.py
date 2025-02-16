@@ -1437,4 +1437,19 @@ class StarCraft2Env(MultiAgentEnv):
         return move_feats
     
 
+    def get_obs_size(self):
+        """Returns the size of the observation."""
+
+        own_feats = self.get_obs_own_feats_size()
+        move_feats = self.get_obs_move_feats_size()
+
+        n_enemies, n_enemy_feats = self.get_obs_enemy_feats_size()
+        n_allies, n_ally_feats = self.get_obs_ally_feats_size()
+
+        enemy_feats = n_enemies * n_enemy_feats
+        ally_feats = n_allies * n_ally_feats
+
+        return move_feats + enemy_feats + ally_feats + own_feats
+    
+
     
