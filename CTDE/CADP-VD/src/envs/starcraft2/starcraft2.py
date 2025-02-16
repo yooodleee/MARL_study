@@ -930,7 +930,7 @@ class StarCraft2Env(MultiAgentEnv):
         return 6
     
 
-    def unit_max_cooldown(self, unit):
+    def unit_sight_range(self, agent_id):
         """Returns the sight range for an agent."""
 
         return 9
