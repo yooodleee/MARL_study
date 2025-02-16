@@ -1663,4 +1663,70 @@ class StarCraft2Env(MultiAgentEnv):
         self._controller.debug(debug_command)
     
 
+    def init_units(self):
+        """Initialize the units."""
+
+        while True:
+            # Somethimes not all units have yet been created by SC2
+            self.agents = {}
+            self.enemies = {}
+
+            ally_units = [
+                unit
+                for unit in self._obs.observation.raw_data.units
+                if unit.owner == 1
+            ]
+            ally_units_sorted = sorted(
+                ally_units,
+                key=attrgetter("unit_type", "pos.x", "pos.y"),
+                reverse=False,
+            )
+
+            for i in range(len(ally_units_sorted)):
+                self.agents[i] = ally_units_sorted[i]
+                if self.debug:
+                    logging.debug(
+                        "Unit {} is {}, x = {}, y = {}".format(
+                            len(self.agents),
+                            self.agents[i].unit_type,
+                            self.agents[i].pos.x,
+                            self.agents[i].pos.y,
+                        )
+                    )
+            
+            for unit in self._obs.observation.raw_data.units:
+                if unit.owner == 2:
+                    self.enemies[len(self.enemies)] = unit
+                    if self._episode_count == 0:
+                        self.max_reward += unit.health_max + unit.shield_max
+            
+            if self._episode_count == 0:
+                min_unit_type = min(
+                    unit.unit_type for unit in self.agents.values()
+                )
+                self._init_ally_unit_types(min_unit_type)
+            
+            all_agents_created = len(self.agents) == self.n_agents
+            all_enemies_created = len(self.enemies) == self.n_enemies
+
+            self._unit_types = [
+                unit.unit_type for unit in ally_units_sorted
+            ] + [
+                unit.unit_type
+                for unit in self._obs.observation.raw_data.units
+                if unit.owner == 2
+            ]
+
+            if all_agents_created and all_enemies_created:  # all good
+                return
+            
+            try:
+                self._controller.step(1)
+                self._obs = self._controller.observe()
+            
+            except (protocol.ProtocalError, protocol.ConnectionError):
+                self.full_restart()
+                self.reset()
+    
+
     
