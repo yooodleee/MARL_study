@@ -924,4 +924,10 @@ class StarCraft2Env(MultiAgentEnv):
         return math.hypot(x2 - x1, y2 - y1)
     
 
+    def unit_shoot_range(self, agent_id):
+        """Returns the shooting range for an agent."""
+
+        return 6
+    
+
     
