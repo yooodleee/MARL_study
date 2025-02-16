@@ -917,4 +917,11 @@ class StarCraft2Env(MultiAgentEnv):
         return self.n_actions
     
 
+    @staticmethod
+    def distance(x1, y1, x2, y2):
+        """Distance between two points."""
+
+        return math.hypot(x2 - x1, y2 - y1)
+    
+
     
