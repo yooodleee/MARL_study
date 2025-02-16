@@ -1032,4 +1032,10 @@ class StarCraft2Env(MultiAgentEnv):
         return points
     
 
+    def check_bounds(self, x , y):
+        """Whether a point is whithin the map bounds."""
+
+        return 0 <= x < self.map_x and 0 <= y < self.map_y
+    
+
     
