@@ -1621,4 +1621,15 @@ class StarCraft2Env(MultiAgentEnv):
         return avail_actions
     
 
+    def close(self):
+        """Close StarCraft II."""
+        
+        if self.renderer is not None:
+            self.renderer.close()
+            self.renderer = None
+        
+        if self._sc2_proc:
+            self._sc2_proc.close()
+    
+
     
