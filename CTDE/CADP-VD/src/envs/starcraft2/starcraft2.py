@@ -1291,4 +1291,9 @@ class StarCraft2Env(MultiAgentEnv):
         return state
     
 
+    def get_enemy_num_attributes(self):
+
+        return len(self.enemy_state_attr_names)
+    
+
     
