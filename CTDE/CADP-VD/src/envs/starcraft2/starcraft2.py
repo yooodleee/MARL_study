@@ -1884,4 +1884,10 @@ class StarCraft2Env(MultiAgentEnv):
         return stats
     
 
-    
+    def get_env_info(self):
+        env_info = super().get_env_info()
+        env_info["agent_features"] = self.ally_state_attr_names
+        env_info["enemy_features"] = self.enemy_state_attr_names
+        env_info["unit_dim"] = self.unit_dim
+
+        return env_info
