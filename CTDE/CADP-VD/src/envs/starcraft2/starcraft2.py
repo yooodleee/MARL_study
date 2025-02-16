@@ -1796,4 +1796,44 @@ class StarCraft2Env(MultiAgentEnv):
         return None
     
 
+    def _init_ally_unit_types(self, min_unit_type):
+        """Initialize ally unit types. Should be called once from 
+        the init_units function.
+        """
+
+        self._min_unit_type = min_unit_type
+        if self.map_type == "marines":
+            self.marine_id = min_unit_type
+        
+        elif self.map_type == "stalkers_and_zealots":
+            self.stalker_id = min_unit_type
+            self.zealot_id = min_unit_type + 1
+        
+        elif self.map_type == "colossi_stalkers_zealots":
+            self.colossus_id = min_unit_type
+            self.stalker_id = min_unit_type + 1
+            self.zealot_id = min_unit_type + 2
+        
+        elif self.map_type == "MMM":
+            self.marauder_id = min_unit_type
+            self.marine_id = min_unit_type + 1
+            self.medivac_id = min_unit_type + 2
+        
+        elif self.map_type == "zealots":
+            self.zealot_id = min_unit_type
+        
+        elif self.map_type == "hydralisks":
+            self.hydralisk_id = min_unit_type
+        
+        elif self.map_type == "stalkers":
+            self.stalker_id = min_unit_type
+        
+        elif self.map_type == "colossus":
+            self.colossus_id = min_unit_type
+        
+        elif self.map_type == "bane":
+            self.baneling_id = min_unit_type
+            self.zergling_id = min_unit_type + 1
+    
+
     
