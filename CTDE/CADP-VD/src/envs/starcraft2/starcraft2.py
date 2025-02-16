@@ -1871,4 +1871,17 @@ class StarCraft2Env(MultiAgentEnv):
         return self.agents[a_id]
     
 
+    def get_stats(self):
+        stats = {
+            "battles_won": self.battles_won,
+            "battles_game": self.battles_game,
+            "battles_draw": self.timeouts,
+            "win_rate": self.battles_won / self.battles_game,
+            "timeouts": self.timeouts,
+            "restarts": self.force_restarts,
+        }
+
+        return stats
+    
+
     
