@@ -1865,4 +1865,10 @@ class StarCraft2Env(MultiAgentEnv):
             return False
     
 
+    def get_unit_by_id(self, a_id):
+        """Get unit by ID."""
+
+        return self.agents[a_id]
+    
+
     
