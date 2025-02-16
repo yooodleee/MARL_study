@@ -1836,4 +1836,33 @@ class StarCraft2Env(MultiAgentEnv):
             self.zergling_id = min_unit_type + 1
     
 
+    def only_medivac_left(self, ally):
+        """Check if only Medivac units are left."""
+
+        if self.map_type != "MMM":
+            return False
+    
+        if ally:
+            units_alive = [
+                a
+                for a in self.agents.values()
+                if (a.health > 0 and a.unit_type != self.medivac_id)
+            ]
+            if len(units_alive) == 0:
+                return True
+            
+            return False
+        
+        else:
+            units_alive = [
+                a
+                for a in self.enemies.values()
+                if (a.health > 0 and a.unit_type != self.medivac_id)
+            ]
+            if len(units_alive) == 1 and units_alive[0].unit_type == 54:
+                return True
+            
+            return False
+    
+
     
