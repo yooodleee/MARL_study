@@ -1729,4 +1729,15 @@ class StarCraft2Env(MultiAgentEnv):
                 self.reset()
     
 
+    def get_unit_types(self):
+        
+        if self._unit_types is None:
+            warn(
+                "unit types have not been initialized yet, please call"
+                "env.reset() to populate this and call t1286he method again."
+            )
+        
+        return self._unit_types
+    
+
     
