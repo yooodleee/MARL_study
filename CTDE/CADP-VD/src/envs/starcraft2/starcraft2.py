@@ -1257,4 +1257,38 @@ class StarCraft2Env(MultiAgentEnv):
         return agent_obs
     
 
+    def get_state(self):
+        """Returns the global state.
+        NOTE: This function should not be used during decentralized exeuction.
+        """
+
+        if self.obs_instead_of_state:
+            obs_concat = np.concatenate(self.get_obs(), axis=0).astype(np.float32)
+        
+            return obs_concat
+        
+        state_dict = self.get_state_dict()
+
+        state = np.append(
+            state_dict["allies"].flatten(), state_dict["enemies"].flatten()
+        )
+        if "last_action" in state_dict:
+            state = np.append(state, state_dict["last_action"].flatten())
+        
+        if "timestep" in state_dict:
+            state = np.append(state, state_dict["timestep"])
+        
+        state = state.astype(dtype=np.float32)
+
+        if self.debug:
+            logging.debug("STATE".center(60, "-"))
+            logging.debug("Ally state {}".format(state_dict["allies"]))
+            logging.debug("Enemy state {}".format(state_dict["enemies"]))
+
+            if self.state_last_action:
+                logging.debug("Last actions {}".format(self.last_action))
+        
+        return state
+    
+
     
