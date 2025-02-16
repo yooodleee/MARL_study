@@ -1638,4 +1638,16 @@ class StarCraft2Env(MultiAgentEnv):
         return self._seed
     
 
+    def render(self, mode="human"):
+        if self.renderer is None:
+            from smac.env.starcraft2.rener import StarCraft2Renderer
+
+            self.renderer = StarCraft2Renderer(self, mode)
+        assert (
+            mode == self.renderer.mode
+        ), "mode must be consistent across render calls"
+
+        return self.renderer.render(mode)
+    
+
     
