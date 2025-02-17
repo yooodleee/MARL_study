@@ -190,4 +190,13 @@ class QLearner:
             self.target_mixer.cuda()
     
 
+    def save_models(self, path):
+        self.mac.save_models(path)
+
+        if self.mixer is not None:
+            torch.save(self.mixer.state_dict(), "{}/mixer.th".format(path))
+        
+        torch.save(self.optimizer.state_dict(), "{}/opt.th".format(path))
+    
+
     
