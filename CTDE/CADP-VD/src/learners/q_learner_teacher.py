@@ -182,4 +182,12 @@ class QLearner:
         self.logger.console_logger.info("Updated target network")
     
 
+    def cuda(self):
+        self.mac.cuda()
+        self.target_mac.cuda()
+        if self.mixer is not None:
+            self.mixer.cuda()
+            self.target_mixer.cuda()
+    
+
     
