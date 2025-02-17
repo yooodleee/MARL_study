@@ -479,4 +479,23 @@ class DMAQ_qattenLearner:
                                                      is_v=True)
     
 
+    def evaluate(
+            self,
+            batch: EpisodeBatch,
+            t_env: None,
+            episode_num=None,
+            show_demo=False,
+            save_data=None,
+    ):
+        self.sub_evaluate(batch,
+                          t_env,
+                          episode_num,
+                          self.mac,
+                          self.mixer,
+                          self.optimizer,
+                          self.params,
+                          show_demo=show_demo,
+                          save_data=save_data)
+    
+
     
