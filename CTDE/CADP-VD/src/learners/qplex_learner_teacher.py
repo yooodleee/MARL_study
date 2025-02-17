@@ -307,4 +307,176 @@ class DMAQ_qattenLearner:
             self.last_target_update_episode = episode_num
     
 
+    def sub_evaluate(
+            self,
+            batch: EpisodeBatch,
+            t_env: int,
+            episode_num: int,
+            mac,
+            mixer,
+            optimizer,
+            params,
+            show_demo=False,
+            save_data=None,
+    ):
+        # Get the relevant quantiles
+        rewards = batch["reward"][:, :-1]
+        actions = batch["actions"][:, :-1]
+        terminated = batch["terminated"][:, :-1].float()
+        mask = batch["filled"][:, :-1].float()
+        mask[:, 1:] = mask[:, 1:] * (1 - terminated[:, :-1])
+        avail_actions = batch["avail_actions"]
+        actions_onehot = batch["actions_onehot"][:, :-1]
+
+
+        # Calculate estimated Q-values
+        mac_out = []
+        mac.init_hidden(batch.batch_size)
+        for t in range(batch.max_seq_length):
+            agent_outs = mac.forward(batch, t=t)
+            mac_out.append(agent_outs)
+        
+        mac_out = torch.stack(mac_out, dim=1)   # Concat over time
+
+
+        # Pick the Q-values for the acts taken by each agent
+        chosen_action_qvals = torch.gather(mac_out[:, :-1], dim=3, index=actions).squeeze(3) # Remove the last dim
+
+        x_mac_out = mac_out.clone().detach()
+        x_mac_out[avail_actions == 0] = -9999999
+        max_action_qvals, max_action_index = x_mac_out[:, :-1].max(dim=3)
+
+        max_action_index = max_action_index.detach().unsqueeze(3)
+        is_max_action = (max_action_index == actions).int().float()
+
+
+        # Calculate the Q-values necessary for the target
+        target_mac_out = []
+        self.target_mac.init_hidden(batch.batch_size)
+        for t in range(batch.max_seq_length):
+            target_agent_outs = self.target_mac.forward(batch, t=t)
+            target_mac_out.append(target_agent_outs)
+        
+
+        # don't need the first timesteps Q-value estimate for calculating targets
+        target_mac_out = torch.stack(target_mac_out[1:], dim=1) # Concat across time
+
+
+        # Mask out unavailable acts
+        target_mac_out[avail_actions[:, 1:] == 0] = -9999999
+
+
+        # Max out target Q-values
+        if self.args.double_q:
+            # Get acts that maximize live Q (for double q-learning)
+            mac_out_detach = mac_out.clone().detach()
+            mac_out_detach[avail_actions == 0] = -9999999
+            cur_max_actions = mac_out_detach[:, 1:].max(dim=3, keepdim=True)[1]
+            target_chosen_qvals = torch.gather(target_mac_out, 3, cur_max_actions).squeeze(3)
+            target_max_qvals = target_mac_out.max(dim=3)[0]
+            target_next_actions = cur_max_actions.detach()
+
+            cur_max_actions_onehot = torch.zeros(cur_max_actions.squeeze(3).shape + (self.n_actions)).cuda()
+            cur_max_actions_onehot = cur_max_actions_onehot.scatter_(3, cur_max_actions, 1)
+        
+        else:
+            # Calculate the Q-values necessary for the target
+            target_mac_out = []
+            self.target_mac.init_hidden(batch.batch_size)
+            for t in range(batch.max_seq_length):
+                target_agent_outs = self.target_mac.forward(batch, t=t)
+                target_mac_out.append(target_agent_outs)
+            
+            # don't need the first timesteps Q-value estimate for calculating targets
+            target_mac_out = torch.stack(target_mac_out[1:], dim=1) # Concat across time
+            target_max_qvals = target_mac_out.max(dim=3)[0]
+        
+
+        # Mix
+        for i in range(chosen_action_qvals.shape[-2]):
+            # print("i=", i, " agent_qvals= ", chosen_action_qvals[0][i])
+            draw.value.append(chosen_action_qvals[0][i])
+            draw.step.append(i)
+        
+        if mixer is not None:
+
+            if self.args.mixer == "dmaq_qatten":
+                ans_chosen, \
+                q_attend_regs, \
+                head_entropies = mixer(chosen_action_qvals, batch["state"][:, :-1], is_v=True)
+
+                ans_adv, _, _ = mixer(chosen_action_qvals,
+                                      batch["state"][:, :-1],
+                                      actions=actions_onehot,
+                                      max_q_i=max_action_qvals,
+                                      is_v=False)
+                chosen_action_qvals = ans_chosen + ans_adv
+
+                for t in range(batch.max_seq_length - 1):
+                    td_error1 = (chosen_action_qvals[0][t][0])
+                    loss1 = td_error1
+                    # Optimize
+                    self.optimizer.zero_grad()
+                    loss1.backward(retain_graph=True)
+                    k = copy.deepcopy(global_Grad.x.grad[0, t])
+                    k = k.view(global_Grad.x.grad.shape[-1])
+                    draw.value_grad.append(k)
+                
+                En = torch.stack(draw.value_grad)
+                grad_entropy = entropy(En).unsqueeze(-1) * mask
+                grad_entropy = grad_entropy.sum(dim=-1) # / mask.sum()
+                fl = 0
+                
+                for i in range(batch.max_seq_length - 1):
+                    if(mask[0][i][0] == 0.0):
+                        fl = i
+                        break
+                
+                grad_entropy = grad_entropy[0][:fl]
+
+                print("grad_entropy: ", grad_entropy.mean())
+
+                draw.main(self.args)
+                return 
+            
+            else:
+                ans_chosen = mixer(chosen_action_qvals,
+                                   batch["state"][:, :-1],
+                                   is_v=True)
+                ans_adv = mixer(chosen_action_qvals,
+                                batch["state"][:, :-1],
+                                actions=actions_onehot,
+                                max_q_i=max_action_qvals,
+                                is_v=False)
+                chosen_action_qvals = ans_chosen + ans_adv
+            
+            if self.args.double_q:
+                if self.args.mixer == "dmaq_qatten":
+                    target_chosen, _, _ = self.target_mixer(target_chosen_qvals,
+                                                            batch["state"][:, 1:],
+                                                            is_v=True)
+                    target_adv, _, _ = self.target_mixer(target_chosen_qvals,
+                                                         batch["state"][:, 1:],
+                                                         actions=cur_max_actions_onehot,
+                                                         max_q_i=target_max_qvals,
+                                                         is_v=False)
+                    target_max_qvals = target_chosen + target_adv
+                
+                else:
+                    target_chosen = self.target_mixer(target_chosen_qvals,
+                                                      batch["state"][:, 1:],
+                                                      is_v=True)
+                    target_adv = self.target_mixer(target_chosen_qvals,
+                                                   batch["state"][:, 1:],
+                                                   actions=cur_max_actions_onehot,
+                                                   max_q_i=target_max_qvals,
+                                                   is_v=False)
+                    target_max_qvals = target_chosen + target_adv
+            
+            else:
+                target_max_qvals = self.target_mixer(target_max_qvals,
+                                                     batch["state"][:, 1:],
+                                                     is_v=True)
+    
+
     
