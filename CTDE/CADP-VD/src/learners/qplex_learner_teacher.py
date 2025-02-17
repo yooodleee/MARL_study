@@ -498,4 +498,33 @@ class DMAQ_qattenLearner:
                           save_data=save_data)
     
 
+    def output_grad(self, mac_out, batch):
+        actions = batch["actions"][:, :-1]
+        avail_actions = batch["avail_actions"]
+        actions_onehot = batch["actions_onehot"][:, :-1]
+
+        x_mac_out = mac_out.clone().detach()
+        x_mac_out[avail_actions == 0] = -9999999
+
+        max_action_qvals, max_action_index = x_mac_out[:, :-1].max(dim=3)
+        chosen_action_qvals = torch.gather(mac_out[:, :-1], dim=3, index=actions).squeeze(3)
+        qvals = chosen_action_qvals
+
+        ans_chosen, \
+        q_attend_regs, \
+        head_entropies = self.mixer(qvals, batch["state"][:, :-1], is_v=True)
+
+        ans_adv, _, _ = self.mixer(qvals,
+                                   batch["state"][:, :-1],
+                                   actions=actions_onehot,
+                                   max_q_i=max_action_qvals,
+                                   is_v=False)
+        chosen_action_qvals = ans_chosen + ans_adv
+
+        # for classifier
+        grad = torch.autograd.grad(chosen_action_qvals.sum(), qvals, create_graph=True)[0]
+
+        return grad
+    
+
     
