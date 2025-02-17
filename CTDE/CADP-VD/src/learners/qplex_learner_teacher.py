@@ -284,4 +284,27 @@ class DMAQ_qattenLearner:
             self.log_stats_t = t_env
     
 
+    def train(
+            self,
+            batch: EpisodeBatch,
+            t_env: int,
+            episode_num: int,
+            show_demo=False,
+            save_data=None,
+    ):
+        self.sub_train(batch,
+                       t_env,
+                       episode_num,
+                       self.mac,
+                       self.mixer,
+                       self.optimizer,
+                       self.params,
+                       show_demo=show_demo,
+                       save_data=save_data)
+        
+        if (episode_num - self.last_target_update_episode) / self.args.target_update_interval >= 1.0:
+            self._update_targets()
+            self.last_target_update_episode = episode_num
+    
+
     
