@@ -553,4 +553,15 @@ class DMAQ_qattenLearner:
         torch.save(self.optimizer.state_dict(), "{}/opt.th".format(path))
     
 
-    
+    def load_models(self, path):
+        self.mac.load_models(path)
+        # Not quite right but don't want to save target networks
+        self.target_mac.load_models(path)
+
+        if self.mixer is not None:
+            self.mixer.load_state_dict(
+                torch.load("{}/mixer.th".format(path), map_location=lambda storage, loc: storage)
+            )
+            self.target_mixer.load_state_dict(
+                torch.load("{}/mixer.th".format(path), map_location=lambda storage, loc: storage)
+            )
