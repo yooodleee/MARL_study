@@ -104,4 +104,54 @@ class DMAQ_QattenMixer(nn.Module):
 
 
 
+class Qatten_Weight(nn.Module):
 
+    def __init__(self, args):
+        super(Qatten_Weight, self).__init__()
+
+        self.name = "qatten_weight"
+        self.args = args
+        self.n_agents = args.n_agents
+        self.state_dim = int(np.prod(args.state_shape))
+        self.unit_dim = args.unit_dim
+        self.n_actions = args.n_actions
+        self.sa_dim = self.state_dim + self.n_agents * self.n_actions
+        self.n_head = args.n_head   # attention head num
+
+        self.embed_dim = args.mixing_embed_dim
+        self.attend_reg_coef = args.attend_reg_coef
+
+        self.key_extractors = nn.ModuleList()
+        self.selector_extractors = nn.ModuleList()
+
+        hypernet_embed = self.args.hypernet_embed
+        for i in range(self.n_head):    # multi-head attention
+            selector_nn = nn.Sequential(
+                nn.Linear(self.state_dim, hypernet_embed),
+                nn.ReLU(),
+                nn.Linear(hypernet_embed, self.embed_dim, bias=False),
+            )
+            self.selector_extractors.append(selector_nn)    # query
+
+            if self.args.nonlinear: # add qs
+                self.key_extractors.append(nn.Linear(self.unit_dim + 1, self.embed_dim, bias=False))   # key
+            else:
+                self.key_extractors.append(nn.Linear(self.unit_dim, self.embed_dim, bias=False))   # key
+        
+        if self.args.weighted_head:
+            self.hyper_w_head = nn.Sequential(
+                nn.Linear(self.state_dim, hypernet_embed),
+                nn.ReLU(),
+                nn.Linear(hypernet_embed, self.n_head),
+            )
+        
+
+        # V(s) instead of a bias for the last layers
+        self.V = nn.Sequential(
+            nn.Linear(self.state_dim, self.embed_dim),
+            nn.ReLU(),
+            nn.Linear(self.embed_dim, 1),
+        )
+    
+
+    
