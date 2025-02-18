@@ -55,4 +55,21 @@ class DMAQ_QattenMixer(nn.Module):
         return adv_tot
     
 
+    def calc(
+            self,
+            agent_qs,
+            states,
+            actions=None,
+            max_q_i=None,
+            is_v=False,
+    ):
+        if is_v:
+            v_tot = self.calc_v(agent_qs)
+            return v_tot
+        else:
+            adv_tot = self.calc_adv(agent_qs, states, actions, max_q_i)
+
+            return adv_tot
+    
+
     
