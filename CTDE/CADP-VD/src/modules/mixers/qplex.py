@@ -308,4 +308,29 @@ class DMAQ_SI_Weight(nn.Module):
                 raise Exception("Error setting number of adv hypernet layers.")
     
 
-    
+    def forward(self, states, actions):
+        states = states.reshape(-1, self.state_dim)
+        actions = actions.reshape(-1, self.action_dim)
+        data = torch.cat([states, actions], dim=1)
+
+        all_head_key = [k_ext(states) for k_ext in self.key_extractors]
+        all_head_agents = [k_ext(states) for k_ext in self.agents_extractors]
+        all_head_action = [sel_ext(data) for sel_ext in self.action_extractors]
+
+
+        head_attend_weights = []
+        for curr_head_key, curr_head_agents, curr_head_action in zip(
+            all_head_key, all_head_agents, all_head_action
+        ):
+            x_key = torch.abs(curr_head_key).repeat(1, self.n_agents) + 1e-10
+            x_agents = F.sigmoid(curr_head_agents)
+            x_action = F.sigmoid(curr_head_action)
+            
+            weights = x_key * x_agents * x_action
+            head_attend_weights.append(weights)
+        
+        head_attend = torch.stack(head_attend_weights, dim=1)
+        head_attend = head_attend.view(-1, self.num_kernel, self.n_agents)
+        head_attend = torch.sum(head_attend, dim=1)
+
+        return head_attend
