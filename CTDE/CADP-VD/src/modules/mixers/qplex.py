@@ -29,4 +29,30 @@ class DMAQ_QattenMixer(nn.Module):
         return v_tot
     
 
+    def calc_adv(
+            self,
+            agent_qs,
+            states,
+            actions,
+            max_q_i,
+    ):
+        states = states.reshape(-1, self.state_dim)
+        actions = actions.reshape(-1, self.action_dim)
+        agent_qs = agent_qs.view(-1, self.n_agents)
+        max_q_i = max_q_i.view(-1, self.n_agents)
+
+        adv_q = (agent_qs - max_q_i).view(-1, self.n_agents).clone().detach()
+
+        adv_w_final = self.si_weight(states, actions)
+        adv_w_final = adv_w_final.view(-1, self.n_agents)
+
+
+        if self.args.is_minus_one:
+            adv_tot = torch.sum(adv_q * (adv_w_final - 1.), dim=1)
+        else:
+            adv_tot = torch.sum(adv_q * adv_w_final, dim=1)
+        
+        return adv_tot
+    
+
     
