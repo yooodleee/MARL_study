@@ -227,3 +227,85 @@ class Qatten_Weight(nn.Module):
 
 
 
+class DMAQ_SI_Weight(nn.Module):
+
+    def __init__(self, args):
+        super(DMAQ_SI_Weight, self).__init__()
+
+        self.args = args
+        self.n_agents = args.n_agents
+        self.n_actions = args.n_actions
+        self.state_dim = int(np.prod(args.state_shape))
+        self.action_dim = args.n_agents * self.n_actions
+        self.state_action_dim = self.state_dim + self.action_dim
+
+        self.num_kernel = args.num_kernel
+
+        self.key_extractors = nn.ModuleList()
+        self.agents_extractors = nn.ModuleList()
+        self.action_extractors = nn.ModuleList()
+
+        adv_hypernet_embed = self.args.adv_hypernet_embed
+        for i in range(self.num_kernel):    # multi-head attention
+            if getattr(args, "adv_hypernet_layers", 1) == 1:
+                self.key_extractors.append(nn.Linear(self.state_dim, 1))    # key
+                self.agents_extractors.append(nn.Linear(self.state_dim, self.n_agents)) # agent
+                self.action_extractors.append(nn.Linear(self.state_action_dim, self.n_agents))  # action
+            
+            elif getattr(args, "adv_hypernet_layers", 1) == 2:
+                self.key_extractors.append(
+                    nn.Sequential(
+                        nn.Linear(self.state_dim, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, 1),
+                    )
+                )   # key
+                self.agents_extractors.append(
+                    nn.Sequential(
+                        nn.Linear(self.state_dim, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, self.n_agents),
+                    )
+                )   # agent
+                self.action_extractors.append(
+                    nn.Sequential(
+                        nn.Linear(self.state_action_dim, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, self.n_agents),
+                    )
+                )   # action
+            
+            elif getattr(args, "adv_hypernet_layers", 1) == 3:
+                self.key_extractors.append(
+                    nn.Sequential(
+                        nn.Linear(self.statedim, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, 1),
+                    )
+                )   # key
+                self.key_extractors.append(
+                    nn.Sequential(
+                        nn.Linear(self.state_dim, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, self.n_agents),
+                    )
+                )   # agent
+                self.action_extractors.append(
+                    nn.Sequential(
+                        nn.Linear(self.state_action_dim, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, adv_hypernet_embed),
+                        nn.ReLU(),
+                        nn.Linear(adv_hypernet_embed, self.n_agents),
+                    )
+                )   # action
+            
+            else:
+                raise Exception("Error setting number of adv hypernet layers.")
+    
+
+    
