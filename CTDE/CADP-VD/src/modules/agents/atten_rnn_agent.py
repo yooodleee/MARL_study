@@ -31,4 +31,9 @@ class ATTRNNAgent(nn.Module):
         )
 
     
+    def init_hidden(self):
+        """Make hidden states on same device as model"""
+        return self.fc1.weight.new(1, self.args.rnn_hidden_dim).zero_()
+    
+
     
