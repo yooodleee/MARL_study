@@ -36,4 +36,39 @@ class ATTRNNAgent(nn.Module):
         return self.fc1.weight.new(1, self.args.rnn_hidden_dim).zero_()
     
 
-    
+    def forward(self, inputs, hidden_state):
+        
+        # INPUT
+        e = inputs.shape[-1]
+        inputs = inputs.reshape(-1, self.args.n_agents, e)
+        b, a, e = inputs.size()
+
+
+        # RNN
+        x = F.relu(self.fc1(inputs.view(-1, e)), inplace=True)
+        h_in = hidden_state.reshape(-1, self.args.rnn_hidden_dim)
+        h = self.rnn(x, h_in)
+
+
+        # ATT
+        att = self.att(inputs.view(b, a, -1))
+        att = F.relu(self.fc2(att), inplace=True).view(-1, self.args.rnn_hidden_dim)
+        att_v = F.relu(self.fc2(self.att.values), inplace=True).view(-1, self.args.rnn_hidden_dim)
+
+
+        # Q
+        q = torch.cat((h, att), dim=-1)
+        q_v = torch.cat((h, att_v), dim=-1)
+
+        inter = self.fc_inter(q)
+        q = self.fc_last(inter)
+        inter_v = self.fc_inter(q_v)
+        q_v = self.fc_last(inter_v).view(b, a, -1)
+        self.q_v = q_v
+
+
+        if self.use_q_v:
+            return q_v.view(b, a, -1), inter.view(b, a, -1), h.view(b, a, -1)
+        
+        else:
+            return q.view(b, a, -1), inter.view(b, a, -1), h.view(b, a, -1)
