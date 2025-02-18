@@ -72,4 +72,36 @@ class DMAQ_QattenMixer(nn.Module):
             return adv_tot
     
 
-    
+    def forward(
+            self,
+            agent_qs,
+            states,
+            actions=None,
+            max_q_i=None,
+            is_v=False,
+    ):
+        bs = agent_qs.size(0)
+        # agent_qs.retain_grad()
+        # global_Grad.x = agent_qs
+
+        w_final, v, attend_mag_regs, head_entropies = self.attention_weight(
+            agent_qs, states, actions
+        )
+        w_final = w_final.view(-1, self.n_agents) + 1e-10
+        v = v.view(-1, 1).repeat(1, self.n_agents)
+        v /= self.n_agents
+
+        agent_qs = agent_qs.view(-1, self.n_agents)
+        agent_qs = w_final * agent_qs + v
+        if not is_v:
+            max_q_i = max_q_i.view(-1, self.n_agents)
+            max_q_i = w_final * max_q_i + v
+        
+        y = self.calc(agent_qs, states, actions=actions, max_q_i=max_q_i, is_v=is_v)
+        v_tot = y.view(bs, -1, 1)
+
+        return v_tot, attend_mag_regs, head_entropies
+
+
+
+
