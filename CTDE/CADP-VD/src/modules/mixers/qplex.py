@@ -22,4 +22,11 @@ class DMAQ_QattenMixer(nn.Module):
         self.si_weight = DMAQ_SI_Weight(args)
     
 
+    def calc_v(self, agent_qs):
+        agent_qs = agent_qs.view(-1, self.n_agents)
+        v_tot = torch.sum(agent_qs, dim=-1)
+
+        return v_tot
+    
+
     
