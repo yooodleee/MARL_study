@@ -297,3 +297,58 @@ class ParallelRunner:
 
 
 
+def env_worker(remote, env_fn):
+    # Make env
+    env = env_fn.x()
+    while True:
+        cmd, data = remote.recv()
+        if cmd == "step":
+            actions = data
+            
+            # Take a step in the env
+            reward, terminated, env_info = env.step(actions)
+
+            # Return the obs, avail_actions and state to make the next action
+            state = env.get_state()
+            avail_actions = env.get_avail_actions()
+            obs = env.get_obs()
+            
+            remote.send(
+                {
+                    # Data for the next timestep needed to pick an action
+                    "state": state,
+                    "avail_actions": avail_actions,
+                    "obs": obs,
+
+                    # Rest of the data for the current timestep
+                    "reward": reward,
+                    "terminated": terminated,
+                    "info": env_info,
+                }
+            )
+        
+        elif cmd == "reset":
+            env.reset()
+            remote.send(
+                {
+                    "state": env.get_state(),
+                    "avail_actions": env.get_avail_actions(),
+                    "obs": env.get_obs(),
+                }
+            )
+        
+        elif cmd == "close":
+            env.close()
+            remote.close()
+        
+        elif cmd == "get_env_info":
+            remote.send(env.get_env_info())
+        
+        elif cmd == "get_stats":
+            remote.send(env.get_stats())
+        
+        else:
+            raise NotImplementedError
+
+
+
