@@ -76,4 +76,42 @@ class ParallelRunner:
         self.preprocess = preprocess
     
 
+    def get_env_info(self):
+        return self.env_info
+    
+
+    def save_replay(self):
+        pass
+
+    def close_env(self):
+        for parent_conn in self.parent_conns:
+            parent_conn.send(("close", None))
+    
+
+    def reset(self):
+        self.batch = self.new_batch()
+
+        # Reset the envs
+        for parent_conn in self.parent_conns:
+            parent_conn.send(("reset", None))
+        
+        pre_transition_data = {
+            "state": [],
+            "avail_actions": [],
+            "obs": [],
+        }
+
+        # Get the obs, state and avail_actions back
+        for parent_conn in self.parent_conns:
+            data = parent_conn.recv()
+            pre_transition_data["state"].append(data["state"])
+            pre_transition_data["avail_actions"].append(data["avail_actions"])
+            pre_transition_data["obs"].append(data["obs"])
+        
+        self.batch.update(pre_transition_data, ts=0)
+
+        self.t = 0
+        self.env_steps_this_run = 0
+    
+
     
